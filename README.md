@@ -121,3 +121,19 @@ class Migration(migrations.Migration):
 >           related_name='created_tasks', 
 >           on_delete=models.CASCADE)
 >```
+
+> - **The Many-To-Many Relationship(ManyToManyField):** In this relationship, objects can relate to
+>several others, which, in turn, can associate with multiple entities.
+>```python
+>   class Sprint(models.Model):
+>       name = models.CharField(max_length=200)
+>       description = models.TextField(blank=True, null=True)
+>       start_date = models.DateField()
+>       end_date = models.DateField()
+>       created_at = models.DateTimeField(auto_now_add=True)
+>       updated_at = models.DateTimeField(auto_now=True)
+>       creator = models.ForeignKey(User,
+>           related_name='created_sprints', on_delete=models.CASCADE)
+>       tasks = models.ManyToManyField('Task',
+>           related_name='sprints', blank=True)
+>   ```

@@ -110,3 +110,14 @@ class Migration(migrations.Migration):
 >        user = models.OneToOneField(User, on_delete=models.CASCADE)
 >        # Other fields...
 >```
+
+> - **The One-To-Many Relationship(OneToManyField):** A One-To-Many relationship implies one object can be related >to several others.
+>```python
+>    from django.db import models
+>    from django.contrib.auth.models import User
+>    class Task(models.Model):
+>       …
+>       creator = models.ForeignKey(User,
+>           related_name='created_tasks', 
+>           on_delete=models.CASCADE)
+>```

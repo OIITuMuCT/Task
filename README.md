@@ -39,3 +39,4 @@
         class Meta:
             db_table_comment = "Holds information about tasks"
 ```
+## 2. Django's database API: Create, retrieve, update, and delete operations

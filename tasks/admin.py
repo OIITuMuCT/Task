@@ -9,6 +9,7 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     actions = ['mark_archived']
     def mark_archived(self, request, queryset):
+        """ method update status ARCHIVED all tasks"""
         queryset.update(status='ARCHIVED')
     mark_archived.short_description = 'Mark selected tasks as archived'
 

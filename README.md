@@ -111,7 +111,7 @@ class Migration(migrations.Migration):
 >        # Other fields...
 >```
 
-> - **The One-To-Many Relationship(OneToManyField):** A One-To-Many relationship implies one object can be related >to several others.
+> - **The One-To-Many Relationship(OneToManyField):** A One-To-Many relationship implies one object can be related to several others.
 >```python
 >    from django.db import models
 >    from django.contrib.auth.models import User
@@ -123,7 +123,7 @@ class Migration(migrations.Migration):
 >```
 
 > - **The Many-To-Many Relationship(ManyToManyField):** In this relationship, objects can relate to
->several others, which, in turn, can associate with multiple entities.
+several others, which, in turn, can associate with multiple entities.
 >```python
 >   class Sprint(models.Model):
 >       name = models.CharField(max_length=200)

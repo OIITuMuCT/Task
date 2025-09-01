@@ -1,6 +1,7 @@
 # Task Manager
 ## 1. Creating a ***Task*** model
-    `from django.db import models
+```python 
+    from django.db import models
     from django.contrib.auth.models import User
 
 
@@ -36,4 +37,5 @@
         )
 
         class Meta:
-            db_table_comment = "Holds information about tasks"`
+            db_table_comment = "Holds information about tasks"
+```

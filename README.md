@@ -95,3 +95,18 @@ class Migration(migrations.Migration):
 - **contains**: Field contains the value. Case-sensitive
 - **in**: Within a range
 - **isnull**: is NULL (or not)
+
+### Extending the models
+
+> - **The One-to-One Relationship(OneToOneField):** A one-to-one relationship
+>implies that one object is related to exactly one other object. This can be
+>seen as a constrained version of the ForeignKey, where the reverse relation
+>is unique.
+> ```python 
+>    from django.db import models
+>    from django.contrib.auth.models import User
+>
+>    class Profile(models.Model):
+>        user = models.OneToOneField(User, on_delete=models.CASCADE)
+>        # Other fields...
+>```

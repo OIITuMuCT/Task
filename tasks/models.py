@@ -6,12 +6,12 @@ class Task(models.Model):
     STATUS_CHOICES = [
         ("UNASSIGNED", "Unassigned"),
         ("IN_PROGRESS", "In Progress"),
-        ("DONE", 'Completed'),
-        ('ARCHIVED', "Archived"),
+        ("DONE", "Completed"),
+        ("ARCHIVED", "Archived"),
     ]
-    
+
     title = models.CharField(max_length=250)
-    description = models.TextField(blank=True, null=False, default=''),
+    description = (models.TextField(blank=True, null=False, default=""),)
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -22,7 +22,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     creator = models.ForeignKey(
-        User, related_name='created_tasks', on_delete=models.CASCADE
+        User, related_name="created_tasks", on_delete=models.CASCADE
     )
 
     owner = models.ForeignKey(
@@ -32,5 +32,6 @@ class Task(models.Model):
         null=True,
         db_comment="Foreign Key to the User who currently owns the task.",
     )
+
     class Meta:
         db_table_comment = "Holds information about tasks"

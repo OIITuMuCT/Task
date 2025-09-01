@@ -86,3 +86,12 @@ class Migration(migrations.Migration):
         migrations.RunPython(create_groups),
     ]
 ```
+## 4. Introduction to Django's ORM: Queries and aggregations
+> ### - Django uses the double underscore is a notation to indicate 
+> ###  a separation in the query and it could be used to perform comparisons:
+- **gt**: Greater than
+- **gte**: Greater than or equal to
+- **lte**: Less than or equal to
+- **contains**: Field contains the value. Case-sensitive
+- **in**: Within a range
+- **isnull**: is NULL (or not)

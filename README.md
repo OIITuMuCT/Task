@@ -1,4 +1,14 @@
 # Task Manager
+* [1. Creating a ***Task*** model](#1-creating-a-task-model)
+  * [Extending the models](#extending-the-models)
+* [2. Django's database API: Create, retrieve, update, and delete operations](#2-djangos-database-api-create-retrieve-update-and-delete-operations)
+* [3. Django's admin interface: Registering models and manipulating data](#3-djangos-admin-interface-registering-models-and-manipulating-data)
+* [4. Introduction to Django's ORM: Queries and aggregations](#4-introduction-to-djangos-orm-queries-and-aggregations)
+* [5. Django Views and URL Handling](#5-django-views-and-url-handling)
+
+
+
+
 ## 1. Creating a ***Task*** model
 ```python 
     from django.db import models
@@ -140,9 +150,8 @@ several others, which, in turn, can associate with multiple entities.
 
 ## 5. Django Views and URL Handling
 
-
-- [### Introduction to Django’s Generic Views](#Introduction-to-Django’s-Generic-Views)
-- Writing Your First Django View
+- [Introduction to Django's Generic Views](#introduction-to-djangos-generic-views)
+- [Writing Your First Django View](#writing-your-first-django-view)
 - Class-based Views Mixins
 - URL Configuration in DjangoCreating URL Patterns for Your Views
 - Using Django’s HttpRequest and HttpResponse Objects
@@ -153,4 +162,25 @@ several others, which, in turn, can associate with multiple entities.
 - Pessimistic and Optimistic Locking Using Views and a Service Layer
 - Error Handling with Custom Error Views
 
-### Introduction to Django’s Generic Views
+### Introduction to Django's Generic Views
+>List and detail views:
+- **ListView:** A view that displays a list of objects from a model.
+- **DetailView:** A view that show a single objects and its details.
+>Date-based views:
+- **ArchiveIndexView:** A date-based view that lists objects from a date-
+based queryset in the "latest firs" order
+- **YearArchiveView:** A date-based view that lists objects from a year-based queryset.
+- **MonthArchiveView:** A date-based view that list objects form a month-based queryset.
+- **WeekArchiveView:** A date-based view that list objects from a week-based queryset.
+- **DayArchiveView:** A date-based view that list objects from a day-based queryset.
+- **TodayArchiveView:** A date-based view that list objects from a queryset related to the current day.
+- **DateDetailView:** A date-based view that provides an object from a date-based queryset, matching the given year, month, and day.
+
+>Editing views:
+- **FormView:** A view that displays a form on GET and processes it on POST.
+- **CreateView:** A view that shows a form for creating a new object, which is saved to a model.
+- **UpdateView:** A view that shows a form for updating an existing objects, which is saved to a model.
+- **DeleteView:** A view that shows a confirmation page and deletes an existing object.
+>The base view:
+- **TemplateView:** A view that renders a specified template. This one does not involve any kind of model operations.
+### Writing Your First Django View

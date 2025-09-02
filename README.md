@@ -137,3 +137,20 @@ several others, which, in turn, can associate with multiple entities.
 >       tasks = models.ManyToManyField('Task',
 >           related_name='sprints', blank=True)
 >   ```
+
+## 5. Django Views and URL Handling
+
+
+- [Introduction to Django’s Generic Views](#Introduction-to-Django’s-Generic-Views)
+- Writing Your First Django View
+- Class-based Views Mixins
+- URL Configuration in DjangoCreating URL Patterns for Your Views
+- Using Django’s HttpRequest and HttpResponse Objects
+- Handling Dynamic URLs with Path Converters
+- Understanding Django’s URL Namespace and Naming URL Patterns
+- Introduction to Function-based Views
+- Using Function-based Views with a Service Layer
+- Pessimistic and Optimistic Locking Using Views and a Service Layer
+- Error Handling with Custom Error Views
+
+### Introduction to Django’s Generic Views

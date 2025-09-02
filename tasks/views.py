@@ -4,6 +4,7 @@ from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from .models import Task
+from .mixins import SprintTaskMixin
 
 
 class TaskListView(ListView):
@@ -22,7 +23,7 @@ class TaskDetailView(DetailView):
     context_object_name = "task"
 
 
-class TaskCreateView(CreateView):
+class TaskCreateView(SprintTaskMixin, CreateView):
     """A view that shows a form for creating a new object, which is saved to a model"""
 
     model = Task
@@ -33,7 +34,7 @@ class TaskCreateView(CreateView):
         return reverse_lazy("task-detail", kwargs={"pk": self.object.id})
 
 
-class TaskUpdateView(UpdateView):
+class TaskUpdateView(SprintTaskMixin, UpdateView):
     """A view that shows a form for updating an existing object, which is saved to a model"""
 
     model = Task

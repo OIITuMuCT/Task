@@ -5,14 +5,34 @@
 - [2. Django's database API: Create, retrieve, update, and delete operations](#2-djangos-database-api-create-retrieve-update-and-delete-operations)
 - [3. Django's admin interface: Registering models and manipulating data](#3-djangos-admin-interface-registering-models-and-manipulating-data)
 - [4. Introduction to Django's ORM: Queries and aggregations](#4-introduction-to-djangos-orm-queries-and-aggregations)
+
 - [5. Django Views and URL Handling](#5-django-views-and-url-handling)
-  - [TaskListView](#tasklistview)
-  - [TaskDetailView](#taskdetailview)
-  - [TaskCreateView](#taskcreateview)
-  - [TaskUpdateView](#taskupdateview)
-  - [TaskDeleteView](#taskdeleteview)
+  - [Introduction to Django's Generic Views](#introduction-to-djangos-generic-views)
+  - [Writing Your First Django View](#writing-your-first-django-view)
+    - [TaskListView](#tasklistview)
+    - [TaskDetailView](#taskdetailview)
+    - [TaskCreateView](#taskcreateview)
+    - [TaskUpdateView](#taskupdateview)
+    - [TaskDeleteView](#taskdeleteview)
+  - [Class-based Views Mixins](#class-based-views-mixins)
+    - [Attribute Mixin](#attribute-mixin)
+    - [Data Modification Mixin](#data-modification-mixin)
+    - [Fetching data](#fetching-data)
+    - [Redirect and Success URL Handling](#redirect-and-success-url-handling)
+  - URL Configuration in DjangoCreating URL Patterns for Your Views
+  - Using Django’s HttpRequest and HttpResponse Objects
+  - Handling Dynamic URLs with Path Converters
+  - Understanding Django’s URL Namespace and Naming URL Patterns
+  - Introduction to Function-based Views
+  - Using Function-based Views with a Service Layer
+  - Pessimistic and Optimistic Locking Using Views and a Service Layer
+  - Error Handling with Custom Error Views
+
 
 ## 1. Creating a **_Task_** model
+<details>  
+<summary>Click to expand</summary>  
+
 
 ```python
     from django.db import models
@@ -53,6 +73,7 @@
         class Meta:
             db_table_comment = "Holds information about tasks"
 ```
+</details>
 
 ## 2. Django's database API: Create, retrieve, update, and delete operations
 
@@ -63,6 +84,8 @@
 > > ### - `shell: python manage.py makemigrations tasks --empty`
 >
 > ### - Configure the groups from it or create a data migration
+<details>  
+<summary>Click to expand</summary>  
 
 ```python
 from django.contrib.auth.models import Group, Permission
@@ -106,6 +129,7 @@ class Migration(migrations.Migration):
         migrations.RunPython(create_groups),
     ]
 ```
+</details>  
 
 ## 4. Introduction to Django's ORM: Queries and aggregations
 
@@ -121,6 +145,8 @@ class Migration(migrations.Migration):
 - **isnull**: is NULL (or not)
 
 ### Extending the models
+<details>  
+<summary>Click to expand</summary>
 
 > - **The One-to-One Relationship(OneToOneField):** A one-to-one relationship
 >   implies that one object is related to exactly one other object. This can be
@@ -164,12 +190,13 @@ class Migration(migrations.Migration):
 >       tasks = models.ManyToManyField('Task',
 >           related_name='sprints', blank=True)
 > ```
+</details> 
 
 ## 5. Django Views and URL Handling
 
 - [Introduction to Django's Generic Views](#introduction-to-djangos-generic-views)
 - [Writing Your First Django View](#writing-your-first-django-view)
-- Class-based Views Mixins
+- [Class-based Views Mixins](#class-based-views-mixins)
 - URL Configuration in DjangoCreating URL Patterns for Your Views
 - Using Django’s HttpRequest and HttpResponse Objects
 - Handling Dynamic URLs with Path Converters
@@ -272,3 +299,55 @@ class Migration(migrations.Migration):
         template_name = 'task_confirm_delete.html'
         success_url = reverse_lazy('task-list')
 ```
+### Class-based Views Mixins
+#### SprintTaskWithinRangeMixin
+```python
+from django.http import HttpResponseBadRequest
+
+from .services import can_add_task_to_sprint
+
+
+class SprintTaskMixin:
+    """
+    Mixin to ensure a task being created or updated is
+    within the date range of its associated sprint.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        task = self.get_object() if hasattr(self, "get_object") else None
+        sprint_id = request.POST.get("sprint_id")
+
+        if sprint_id:
+            # If task exists (for UpdateView) or
+            # is about to be created (for CreateView)
+            if task or request.method == "POST":
+                if not can_add_task_to_sprint(task, sprint_id):
+                    return HttpResponseBadRequest(
+                        "Task's creation date is outside the "
+                        "date range of the associated sprint."
+                    )
+
+        return super().dispatch(request, *args, **kwargs)
+```
+#### The code for service layer is the following:
+```python
+def can_add_task_to_sprint(task, sprint_id):
+    """
+    Checks if a task can be added to a sprint based on the sprint's date range.
+    """
+    sprint = get_object_or_404(Sprint, id=sprint_id)
+    return sprint.start_date <= task.created_at.date() <= sprint.end_date
+```
+<details>  
+<summary>Click to expand</summary>
+
+#### Attribute Mixin
+- **ContentMixin:** Adds extra content data to the view.
+- **TemplateResponseMixin:** Renders template and returns an HTTP response.
+- **SingleObjectsMixin:** Provides handling to get a single object from the database.
+#### Data Modification Mixin
+#### Fetching data
+#### Redirect and Success URL Handling
+
+This is the content of the collapsible section. You can include any Markdown-форматированный текст, списки или код здесь.  
+</details>  

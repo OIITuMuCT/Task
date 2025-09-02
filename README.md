@@ -141,7 +141,7 @@ several others, which, in turn, can associate with multiple entities.
 ## 5. Django Views and URL Handling
 
 
-- [Introduction to Django’s Generic Views](#Introduction-to-Django’s-Generic-Views)
+- [### Introduction to Django’s Generic Views](#Introduction-to-Django’s-Generic-Views)
 - Writing Your First Django View
 - Class-based Views Mixins
 - URL Configuration in DjangoCreating URL Patterns for Your Views

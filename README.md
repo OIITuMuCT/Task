@@ -7,32 +7,40 @@
 - [4. Introduction to Django's ORM: Queries and aggregations](#4-introduction-to-djangos-orm-queries-and-aggregations)
 
 - [5. Django Views and URL Handling](#5-django-views-and-url-handling)
+
   - [Introduction to Django's Generic Views](#introduction-to-djangos-generic-views)
   - [Writing Your First Django View](#writing-your-first-django-view)
+    <details>
+    <summary>Click to expand</summary>
+
     - [TaskListView](#tasklistview)
     - [TaskDetailView](#taskdetailview)
     - [TaskCreateView](#taskcreateview)
     - [TaskUpdateView](#taskupdateview)
     - [TaskDeleteView](#taskdeleteview)
+
+    </details>
+
   - [Class-based Views Mixins](#class-based-views-mixins)
     - [Attribute Mixin](#attribute-mixin)
     - [Data Modification Mixin](#data-modification-mixin)
     - [Fetching data](#fetching-data)
     - [Redirect and Success URL Handling](#redirect-and-success-url-handling)
-  - URL Configuration in DjangoCreating URL Patterns for Your Views
-  - Using Django’s HttpRequest and HttpResponse Objects
-  - Handling Dynamic URLs with Path Converters
-  - Understanding Django’s URL Namespace and Naming URL Patterns
-  - Introduction to Function-based Views
-  - Using Function-based Views with a Service Layer
-  - Pessimistic and Optimistic Locking Using Views and a Service Layer
-  - Error Handling with Custom Error Views
-
+  - [URL Configuration in Django](#url-configuration-in-django)
+  - [Creating URL Patterns for Your Views](#creating-url-patterns-for-your-views)
+  - [Using Django’s HttpRequest and HttpResponse Objects](#using-djangos-httprequest-and-httpresponse-objects)
+  - [Handling Dynamic URLs with Path Converters](#handling-dynamic-urls-with-path-converters)
+  - [Understanding Django’s URL Namespace and Naming URL Patterns](#understanding-djangos-url-namespace-and-naming-url-patterns)
+  - [Introduction to Function-based Views](#introduction-to-function-based-views)
+  - [Using Function-based Views with a Service Layer](#using-function-based-views-with-a-service-layer)
+  - [Pessimistic and Optimistic Locking Using Views and a Service Layer](#pessimistic-and-optimistic-locking-using-views-and-a-service-layer)
+  - [Error Handling with Custom Error Views](#error-handling-with-custom-error-views)
 
 ## 1. Creating a **_Task_** model
-<details>  
-<summary>Click to expand</summary>  
 
+<!-- start 1 -->
+<details>  
+<summary>Click to expand</summary>
 
 ```python
     from django.db import models
@@ -73,19 +81,27 @@
         class Meta:
             db_table_comment = "Holds information about tasks"
 ```
+
 </details>
+<!-- end 1 -->
 
 ## 2. Django's database API: Create, retrieve, update, and delete operations
 
+<!-- start 2 -->
+<!-- end 2 -->
+
 ## 3. Django's admin interface: Registering models and manipulating data
 
-> ### - Firstly, you need to create an empty migration:
->
-> > ### - `shell: python manage.py makemigrations tasks --empty`
->
-> ### - Configure the groups from it or create a data migration
+<!-- start 3 -->
+
+- #### Firstly, you need to create an empty migration:
+
+  `shell: python manage.py makemigrations tasks --empty`
+
+- #### Configure the groups from it or create a data migration
+
 <details>  
-<summary>Click to expand</summary>  
+<summary>Click to expand</summary>
 
 ```python
 from django.contrib.auth.models import Group, Permission
@@ -129,109 +145,130 @@ class Migration(migrations.Migration):
         migrations.RunPython(create_groups),
     ]
 ```
-</details>  
+
+</details>
+<!-- end 3 -->
 
 ## 4. Introduction to Django's ORM: Queries and aggregations
 
-> ### - Django uses the double underscore is a notation to indicate
->
-> ### a separation in the query and it could be used to perform comparisons:
+<!-- start 4 -->
 
-- **gt**: Greater than
-- **gte**: Greater than or equal to
-- **lte**: Less than or equal to
-- **contains**: Field contains the value. Case-sensitive
-- **in**: Within a range
-- **isnull**: is NULL (or not)
+- ### Django uses the double underscore is a notation to indicate a separation in the query and it could be used to perform comparisons:
 
-### Extending the models
-<details>  
-<summary>Click to expand</summary>
+  <details>  
+  <summary>Click to expand</summary>
 
-> - **The One-to-One Relationship(OneToOneField):** A one-to-one relationship
->   implies that one object is related to exactly one other object. This can be
->   seen as a constrained version of the ForeignKey, where the reverse relation
->   is unique.
->
-> ```python
->    from django.db import models
->    from django.contrib.auth.models import User
->
->    class Profile(models.Model):
->        user = models.OneToOneField(User, on_delete=models.CASCADE)
->        # Other fields...
-> ```
+  - **gt**: Greater than
+  - **gte**: Greater than or equal to
+  - **lte**: Less than or equal to
+  - **contains**: Field contains the value. Case-sensitive
+  - **in**: Within a range
+  - **isnull**: is NULL (or not)
+  </details>
 
-> - **The One-To-Many Relationship(OneToManyField):** A One-To-Many relationship implies one object can be related to several others.
->
-> ```python
->    from django.db import models
->    from django.contrib.auth.models import User
->    class Task(models.Model):
->       …
->       creator = models.ForeignKey(User,
->           related_name='created_tasks',
->           on_delete=models.CASCADE)
-> ```
+- ### Extending the models
 
-> - **The Many-To-Many Relationship(ManyToManyField):** In this relationship, objects can relate to
->   several others, which, in turn, can associate with multiple entities.
->
-> ```python
->   class Sprint(models.Model):
->       name = models.CharField(max_length=200)
->       description = models.TextField(blank=True, null=True)
->       start_date = models.DateField()
->       end_date = models.DateField()
->       created_at = models.DateTimeField(auto_now_add=True)
->       updated_at = models.DateTimeField(auto_now=True)
->       creator = models.ForeignKey(User,
->           related_name='created_sprints', on_delete=models.CASCADE)
->       tasks = models.ManyToManyField('Task',
->           related_name='sprints', blank=True)
-> ```
-</details> 
+    <details>  
+    <summary>Click to expand</summary>
+
+  - **The One-to-One Relationship(OneToOneField):** A one-to-one relationship
+    implies that one object is related to exactly one other object. This can be
+    seen as a constrained version of the ForeignKey, where the reverse relation
+    is unique.
+
+    ```python
+       from django.db import models
+       from django.contrib.auth.models import User
+
+       class Profile(models.Model):
+           user = models.OneToOneField(User, on_delete=models.CASCADE)
+           # Other fields...
+    ```
+
+    - **The One-To-Many Relationship(OneToManyField):** A One-To-Many relationship implies one object can be related to several others.
+
+    ```python
+    from django.db import models
+    from django.contrib.auth.models import User
+    class Task(models.Model):
+       …
+       creator = models.ForeignKey(User,
+           related_name='created_tasks',
+           on_delete=models.CASCADE)
+    ```
+
+    - **The Many-To-Many Relationship(ManyToManyField):** In this relationship, objects can relate to
+      several others, which, in turn, can associate with multiple entities.
+
+    ```python
+        class Sprint(models.Model):
+            name = models.CharField(max_length=200)
+            description = models.TextField(blank=True, null=True)
+            start_date = models.DateField()
+            end_date = models.DateField()
+            created_at = models.DateTimeField(auto_now_add=True)
+            updated_at = models.DateTimeField(auto_now=True)
+            creator = models.ForeignKey(User,
+                related_name='created_sprints', on_delete=models.CASCADE)
+            tasks = models.ManyToManyField('Task',
+                related_name='sprints', blank=True)
+    ```
+
+    </details>
 
 ## 5. Django Views and URL Handling
+
+<!-- start 5 -->
 
 - [Introduction to Django's Generic Views](#introduction-to-djangos-generic-views)
 - [Writing Your First Django View](#writing-your-first-django-view)
 - [Class-based Views Mixins](#class-based-views-mixins)
-- URL Configuration in DjangoCreating URL Patterns for Your Views
-- Using Django’s HttpRequest and HttpResponse Objects
-- Handling Dynamic URLs with Path Converters
-- Understanding Django’s URL Namespace and Naming URL Patterns
-- Introduction to Function-based Views
-- Using Function-based Views with a Service Layer
-- Pessimistic and Optimistic Locking Using Views and a Service Layer
-- Error Handling with Custom Error Views
+- [URL Configuration in Django](#url-configuration-in-django)
+- [Creating URL Patterns for Your Views](#creating-url-patterns-for-your-view)
+- [Using Django’s HttpRequest and HttpResponse Objects](#using-djangos-httprequest-and-httpresponse-objects)
+- [Handling Dynamic URLs with Path Converters](#handling-dynamic-urls-with-path-converters)
+- [Understanding Django’s URL Namespace and Naming URL Patterns](#understanding-djangos-url-namespace-and-naming-url-patterns)
+- [Introduction to Function-based Views](#introduction-to-function-based-views)
+- [Using Function-based Views with a Service Layer](#using-function-based-views-with-a-service-layer)
+- [Pessimistic and Optimistic Locking Using Views and a Service Layer](#pessimistic-and-optimistic-locking-using-views-and-a-service-layer)
+- [Error Handling with Custom Error Views](#error-handling-with-custom-error-views)
 
 ### Introduction to Django's Generic Views
 
-> List and detail views:
+<details>  
+    <summary>Click to expand</summary>
 
-- **ListView:** A view that displays a list of objects from a model.
-- **DetailView:** A view that show a single objects and its details.
-  > Date-based views:
-- **ArchiveIndexView:** A date-based view that lists objects from a date-
-  based queryset in the "latest firs" order
-- **YearArchiveView:** A date-based view that lists objects from a year-based queryset.
-- **MonthArchiveView:** A date-based view that list objects form a month-based queryset.
-- **WeekArchiveView:** A date-based view that list objects from a week-based queryset.
-- **DayArchiveView:** A date-based view that list objects from a day-based queryset.
-- **TodayArchiveView:** A date-based view that list objects from a queryset related to the current day.
-- **DateDetailView:** A date-based view that provides an object from a date-based queryset, matching the given year, month, and day.
+- List and detail views:
 
-> Editing views:
+  - **ListView:** A view that displays a list of objects from a model.
+  - **DetailView:** A view that show a single objects and its details.
 
-- **FormView:** A view that displays a form on GET and processes it on POST.
-- **CreateView:** A view that shows a form for creating a new object, which is saved to a model.
-- **UpdateView:** A view that shows a form for updating an existing objects, which is saved to a model.
-- **DeleteView:** A view that shows a confirmation page and deletes an existing object.
-  > The base view:
-- **TemplateView:** A view that renders a specified template. This one does not involve any kind of model operations.
+- Date-based views:
+
+  - **ArchiveIndexView:** A date-based view that lists objects from a date-based queryset in the "latest firs" order
+  - **YearArchiveView:** A date-based view that lists objects from a year-based queryset.
+  - **MonthArchiveView:** A date-based view that list objects form a month-based queryset.
+  - **WeekArchiveView:** A date-based view that list objects from a week-based queryset.
+  - **DayArchiveView:** A date-based view that list objects from a day-based queryset.
+  - **TodayArchiveView:** A date-based view that list objects from a queryset related to the current day.
+  - **DateDetailView:** A date-based view that provides an object from a date-based queryset, matching the given year, month, and day.
+
+- Editing views:
+
+  - **FormView:** A view that displays a form on GET and processes it on POST.
+  - **CreateView:** A view that shows a form for creating a new object, which is saved to a model.
+  - **UpdateView:** A view that shows a form for updating an existing objects, which is saved to a model.
+  - **DeleteView:** A view that shows a confirmation page and deletes an existing object.
+
+- The base view:
+
+  - **TemplateView:** A view that renders a specified template. This one does not involve any kind of model operations.
+</details>
 
 ### Writing Your First Django View
+
+<details>  
+<summary>Click to expand</summary>
 
 #### TaskListView
 
@@ -299,8 +336,16 @@ class Migration(migrations.Migration):
         template_name = 'task_confirm_delete.html'
         success_url = reverse_lazy('task-list')
 ```
+
+</details>
+
 ### Class-based Views Mixins
+
 #### SprintTaskWithinRangeMixin
+
+<details>  
+<summary>Click to expand</summary>
+
 ```python
 from django.http import HttpResponseBadRequest
 
@@ -329,7 +374,9 @@ class SprintTaskMixin:
 
         return super().dispatch(request, *args, **kwargs)
 ```
+
 #### The code for service layer is the following:
+
 ```python
 def can_add_task_to_sprint(task, sprint_id):
     """
@@ -338,16 +385,73 @@ def can_add_task_to_sprint(task, sprint_id):
     sprint = get_object_or_404(Sprint, id=sprint_id)
     return sprint.start_date <= task.created_at.date() <= sprint.end_date
 ```
+
+</details>  
 <details>  
 <summary>Click to expand</summary>
 
 #### Attribute Mixin
+
 - **ContentMixin:** Adds extra content data to the view.
 - **TemplateResponseMixin:** Renders template and returns an HTTP response.
 - **SingleObjectsMixin:** Provides handling to get a single object from the database.
+
 #### Data Modification Mixin
+
+- **FormMixin:** Used to handle form submission and validation.
+- **ModelFormMixin:** Extends FormMixin to deal with model forms.
+- **CreateModelMixin:** Used to save a new object to the database.
+- **UpdateModelMixin:** Used to update an existing object in the database.
+- **DeleteModelMixin:** Used to delete an object.
+
 #### Fetching data
+
+- **SingleObjectMixin:** Used to fetch a single object based on the primary key or slug
+- **MultipleObjectsMixin:** Used to fetch multiple objects (often used for listing views)
+- **Pagination**
+- **MultipleObjectMixin:** Provides pagination functionality if the **paginate_by** attribute is set
+
 #### Redirect and Success URL Handling
 
-This is the content of the collapsible section. You can include any Markdown-форматированный текст, списки или код здесь.  
-</details>  
+- **RedirectView:** Used to handle simple HTTP redirects.
+- **SuccessMessageMixin:** Used to display a success message after acting successfully.
+</details>
+
+
+### URL Configuration in Django
+### Creating URL Patterns for Your Views
+
+<details>
+<summary>Click to expand</summary>
+
+```python
+from django.urls import path
+from tasks.views import (
+    TaskListView,
+    TaskDeleteView,
+    TaskCreateView,
+    TaskUpdateView,
+    TaskDetailView,
+)
+urlpatterns = [
+    path("", TemplateView.as_view(template_name="tasks/home.html"), name="home"),
+    path("help/", TemplateView.as_view(template_name="tasks/help.html"), name="help"),
+    path("tasks/", TaskListView.as_view(), name="task-list"),  # GET
+    path("tasks/new/", TaskCreateView.as_view(), name="task-create"),  # POST
+    path("tasks/<int:pk>/", TaskDetailView.as_view(), name="task-detail"),
+    path(
+        "tasks/<int:pk>/edit/", TaskUpdateView.as_view(), name="task-update"
+    ),  # PUT/PATCH
+    path("tasks/<int:pk>/delete/", TaskDeleteView.as_view(), name='task-delete'), # DELETE
+]
+```
+</details>
+
+### Using Django’s HttpRequest and HttpResponse Objects
+
+### Handling Dynamic URLs with Path Converters
+### Understanding Django’s URL Namespace and Naming URL Patterns
+### Introduction to Function-based Views
+### Using Function-based Views with a Service Layer
+### Pessimistic and Optimistic Locking Using Views and a Service Layer
+### Error Handling with Custom Error Views

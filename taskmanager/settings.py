@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # custom app
     "tasks",
-    "storages"
+    "storages",
+    "widget_tweaks",
     
 ]
 

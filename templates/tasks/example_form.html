@@ -1,0 +1,10 @@
+{% extends "tasks/base.html" %}
+
+{% block content %}
+<h1>Example view</h1>
+<form action="{% url "tasks:example-form" %}" method="post">
+    {% csrf_token %}
+    {{form.as_p}}
+    <button type="submit">Save Form</button>
+</form>
+{% endblock %}

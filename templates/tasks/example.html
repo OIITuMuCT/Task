@@ -1,1 +1,7 @@
+{% extends "tasks/base.html" %}
+{% block content %}
 <h1>Example view</h1>
+<a href="{% url "tasks:example-form" %}">send form</a>
+</div>
+
+{% endblock %}

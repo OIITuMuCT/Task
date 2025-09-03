@@ -607,8 +607,52 @@ urlpatterns = [
     </form>
     ```
 - ### Creating Your First Django Form
-
+> Create: tasks/forms.py 
+```python
+    from django import forms
+    from .models import Task
+    class TaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = ["title", "description", "status"]
+```
 - ### Rendering Forms in Templates
+
+```shell
+    poetry shell
+    poetry add django-widget-tweaks
+```
+```HTML
+{% extends "tasks/base.html" %}
+{% load widget_tweaks %} 
+{% block content %}
+<div class="d-flex justify-content-center align-items-center vh-100">
+  <div class="w-50">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="text-center">Create a New Task</h2>
+      </div>
+      <div class="card-body">
+        <form method="post" 
+        action="{% if task.pk %}{% url 'tasks:task-update' task.pk %}{% else %}{% url 'tasks:task-create' %}{% endif %}">
+          {% csrf_token %} {% for field in form %}
+          <div class="mb-3">
+            <label for="{{ field.id_for_label }}" class="form- label"
+              >{{ field.label }}</label
+            >
+            {% if field.errors %}
+            <div class="alert alert-danger">{{ field.errors }}</div>
+            {% endif %} {{ field|add_class:"form-control" }}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary w- 100">Save</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+```
 
 - ### Handling Form Submission in Views
 

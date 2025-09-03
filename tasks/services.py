@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from .models import Sprint, Task
 
 class TaskAlreadyClaimedException(Exception):
@@ -58,3 +59,8 @@ def create_task_and_add_to_sprint(task_data: dict[str, str], sprint_id: int, cre
         # Add the task to the sprint
         sprint.tasks.add(task)
     return task
+
+def send_contact_email(
+        subject: str, message: str, from_email: str, to_email: str
+    ) -> None:
+    send_mail(subject, message, from_email, [to_email])

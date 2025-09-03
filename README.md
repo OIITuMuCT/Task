@@ -50,9 +50,20 @@
   - [Optimizing Template Rendering](#optimizing-template-rendering)
   - [Securing Django Templates](#securing-django-templates)
 
+- [7. Forms in Django](#7-forms-in-django)
+  - [Understanding Django Forms](#understanding-django-forms)
+  - [Creating Your First Django Form](#creating-your-first-django-form)
+  - [Rendering Forms in Templates](#rendering-forms-in-templates)
+  - [Handling Form Submission in Views](#handling-form-submission-in-views)
+  - [Working with Form Fields](#working-with-form-fields)
+  - [File and Image Upload Field](#file-and-image-upload-field)
+  - [Data Validation with Django Forms](#data-validation-with-django-forms)
+  - [Displaying Form Errors](#displaying-form-errors)
+  - [Advanced Form Handling: ModelForms and Formsets](#advanced-form-handling-modelforms-and-formsets)
+  - [Preventing Double Submission with Forms](#preventing-double-submission-with-forms)
 ## 1. Creating a **_Task_** model
 
-<!-- start 1 -->
+<!--Chapter 1-->
 <details>  
 <summary>Click to expand</summary>
 
@@ -98,15 +109,15 @@
 
 </details>
 <!-- end 1 -->
+<!--Chapter 2-->
 
 ## 2. Django's database API: Create, retrieve, update, and delete operations
 
 <!-- start 2 -->
 <!-- end 2 -->
-
+<!--Chapter 3-->
 ## 3. Django's admin interface: Registering models and manipulating data
 
-<!-- start 3 -->
 
 - #### Firstly, you need to create an empty migration:
 
@@ -162,10 +173,9 @@ class Migration(migrations.Migration):
 
 </details>
 <!-- end 3 -->
-
+<!--Chapter 4-->
 ## 4. Introduction to Django's ORM: Queries and aggregations
 
-<!-- start 4 -->
 
 - ### Django uses the double underscore is a notation to indicate a separation in the query and it could be used to perform comparisons:
 
@@ -229,10 +239,8 @@ class Migration(migrations.Migration):
     ```
 
     </details>
-
+<!--Chapter 5-->
 ## 5. Django Views and URL Handling
-
-<!-- start 5 -->
 
 - [Introduction to Django's Generic Views](#introduction-to-djangos-generic-views)
 - [Writing Your First Django View](#writing-your-first-django-view)
@@ -475,7 +483,7 @@ urlpatterns = [
 ### Pessimistic and Optimistic Locking Using Views and a Service Layer
 
 ### Error Handling with Custom Error Views
-
+<!--Chapter 6-->
 ## 6. Using the Django Template Engine
 
 - ### Introduction to Django Template Engine
@@ -576,3 +584,42 @@ urlpatterns = [
         - **Limit QuerySets:** If you only need a few items, use [:n] slicing. For
             example, **Article.objects.all()[:5]** only fetches five articles.
 - ### Securing Django Templates
+<!--the end chapter 6-->
+
+<!--chapter 7-->
+## 7. Forms in Django
+- ### Understanding Django Forms
+    - Here is and example fo a raw HTML form to create a new Task object without using Django forms:
+    ```HTML
+    <form action="/tasks/new/" method="POST">
+      <label for="title">Title:</label><br>
+      <input type="text" id="title" name="title" required><br>
+      <label for="description">Description:</label><br>
+      <textarea id="description" name="description"></textarea><br>
+      <label for="status">Status:</label><br>
+      <select id="status" name="status">
+        <option value="UNASSIGNED">Unassigned</option>
+        <option value="IN_PROGRESS">In Progress</option>
+        <option value="DONE">Completed</option>
+        <option value="ARCHIVED">Archived</option>
+      </select><br>
+      <input type="submit" value="Create Task">
+    </form>
+    ```
+- ### Creating Your First Django Form
+
+- ### Rendering Forms in Templates
+
+- ### Handling Form Submission in Views
+
+- ### Working with Form Fields
+
+- ### File and Image Upload Field
+
+- ### Data Validation with Django Forms
+
+- ### Displaying Form Errors
+
+- ### Advanced Form Handling: ModelForms and Formsets
+
+- ### Preventing Double Submission with Forms

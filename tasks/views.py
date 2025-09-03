@@ -101,6 +101,20 @@ def example_view(request):
     html = template.render(context, request)
     return HttpResponse(html)
 
+def contact_form_view(request):
+    """ Send to email form """
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            subject = form.cleaned_data['subject']
+            message = form.cleaned_data['message']
+            from_email = form.cleaned_data['from_email']
+            services.send_contact_email(subject, message, from_email, 'your-email@example.com')
+            return redirect(reverse('tasks:contact-success'))
+    else:
+        form = ContactForm()
+    return render(request, 'tasks/example_form.html', {'form': form})
+    # return render(request, "tasks/example.html", {"form": form})
 
 def create_task_on_sprint(request: HttpRequest, sprint_id: int) -> HttpResponseRedirect:
     if request.method == "POST":
@@ -134,7 +148,6 @@ def custom_404(request, exception):
     return render(request, "404.html", {}, status=404)
 
 
-
 class ContactFormView(FormView):
     template_name = "tasks/contact_form.html"
     form_class = ContactForm
@@ -144,7 +157,13 @@ class ContactFormView(FormView):
         subject = form.cleaned_data.get("subject")
         message = form.cleaned_data.get("message")
         from_email = form.cleaned_data.get("from_email")
+
+        # You can use Django's send_mail function,
+        # here is a simple example that sends the message to your email.
+        # Please update 'your-email@example.com' with your email and configure
+        # the EMAIL settings in your Django settings file
         services.send_contact_email(
             subject, message, from_email, ["your-email@example.com"]
         )
+
         return super().form_valid(form)

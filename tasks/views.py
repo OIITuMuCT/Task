@@ -9,7 +9,7 @@ from django.http import (
 )
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy, reverse
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, FormView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.template import loader
 from datetime import date
@@ -18,7 +18,7 @@ from .models import Task
 from .mixins import SprintTaskMixin
 from . import services
 from .services import create_task_and_add_to_sprint
-from .forms import TaskForm
+from .forms import TaskForm, ContactForm
 
 
 class TaskListView(ListView):
@@ -132,3 +132,19 @@ def claim_task_view(request, task_id):
 
 def custom_404(request, exception):
     return render(request, "404.html", {}, status=404)
+
+
+
+class ContactFormView(FormView):
+    template_name = "tasks/contact_form.html"
+    form_class = ContactForm
+    success_url = reverse_lazy("tasks:contact-success")
+
+    def form_valid(self, form):
+        subject = form.cleaned_data.get("subject")
+        message = form.cleaned_data.get("message")
+        from_email = form.cleaned_data.get("from_email")
+        services.send_contact_email(
+            subject, message, from_email, ["your-email@example.com"]
+        )
+        return super().form_valid(form)

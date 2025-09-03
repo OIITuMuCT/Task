@@ -18,13 +18,14 @@ from .models import Task
 from .mixins import SprintTaskMixin
 from . import services
 from .services import create_task_and_add_to_sprint
+from .forms import TaskForm
 
 
 class TaskListView(ListView):
     """A view that display a list of objects from a Task model"""
 
     model = Task
-    template_name = "tasks/task_list.html"
+    template_name = "task_list.html"
     context_object_name = "tasks"
 
 
@@ -41,7 +42,8 @@ class TaskCreateView(CreateView):
 
     model = Task
     template_name = "tasks/task_form.html"
-    fields = ("title", "description")
+    # fields = ("title", "description")
+    form_class = TaskForm
 
     def get_success_url(self):
         return reverse_lazy("task-detail", kwargs={"pk": self.object.id})
@@ -55,7 +57,7 @@ class TaskUpdateView(SprintTaskMixin, UpdateView):
     fields = ("title", "description")
 
     def get_success_url(self):
-        return reverse_lazy("task-detail", kwargs={"pk": self.object.id})
+        return reverse_lazy("tasks:task-detail", kwargs={"pk": self.object.id})
 
 
 class TaskDeleteView(DeleteView):
@@ -63,7 +65,7 @@ class TaskDeleteView(DeleteView):
 
     model = Task
     template_name = "tasks/task_confirm_delete.html"
-    success_url = reverse_lazy("task-list")
+    success_url = reverse_lazy("tasks:task-list")
 
 
 def task_by_date(request: HttpRequest, by_date: date) -> HttpResponse:

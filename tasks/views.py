@@ -1,14 +1,16 @@
+from collections import defaultdict
+from datetime import date
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseRedirect,
+    Http404,
+    JsonResponse,
+)
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy, reverse
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
-from django.http import (
-    HttpRequest, 
-    HttpResponse, 
-    HttpResponseRedirect, 
-    Http404,
-    JsonResponse
-)
 from django.template import loader
 from datetime import date
 
@@ -34,12 +36,12 @@ class TaskDetailView(DetailView):
     context_object_name = "task"
 
 
-class TaskCreateView(SprintTaskMixin, CreateView):
+class TaskCreateView(CreateView):
     """A view that shows a form for creating a new object, which is saved to a model"""
 
     model = Task
     template_name = "tasks/task_form.html"
-    fields = ("name", "description", "start_date", "end_date")
+    fields = ("title", "description")
 
     def get_success_url(self):
         return reverse_lazy("task-detail", kwargs={"pk": self.object.id})
@@ -50,7 +52,7 @@ class TaskUpdateView(SprintTaskMixin, UpdateView):
 
     model = Task
     template_name = "tasks/task_form.html"
-    fields = ("name", "description", "start_date", "end_date")
+    fields = ("title", "description")
 
     def get_success_url(self):
         return reverse_lazy("task-detail", kwargs={"pk": self.object.id})
@@ -63,13 +65,33 @@ class TaskDeleteView(DeleteView):
     template_name = "tasks/task_confirm_delete.html"
     success_url = reverse_lazy("task-list")
 
+
 def task_by_date(request: HttpRequest, by_date: date) -> HttpResponse:
     tasks = services.get_task_by_date(by_date)
-    context = {"tasks" : tasks}
+    context = {"tasks": tasks}
     return render(request, "tasks/task_list.html", context)
 
+
 def task_home(request):
-    return redirect(reverse("tasks:task-list"))
+    # Fetch all tasks at once
+    tasks = Task.objects.filter(
+        status__in=["UNASSIGNED", "IN_PROGRESS", "DONE", "ARCHIVED"]
+    )
+    # initialize dictionaries to hold tasks by status
+    context = defaultdict(list)
+    # Categorize tasks into their respective lists for task in tasks:
+    for task in tasks:
+        if task.status == "UNASSIGNED":
+            context["unassigned_tasks"].append(task)
+        elif task.status == "IN_PROGRESS":
+            context["in_progress_tasks"].append(task)
+        elif task.status == "DONE":
+            context["done_tasks"].append(task)
+        elif task.status == "ARCHIVED":
+            context["archived_tasks"].append(task)
+    # return redirect(reverse("tasks:task-list"))
+    return render(request, "tasks/home.html", context)
+
 
 def example_view(request):
     template = loader.get_template("tasks/example.html")
@@ -91,6 +113,7 @@ def create_task_on_sprint(request: HttpRequest, sprint_id: int) -> HttpResponseR
         return redirect("tasks:task-detail", task_id=task.id)
     raise Http404("Not found")
 
+
 def claim_task_view(request, task_id):
     user_id = (
         request.user.id
@@ -98,10 +121,12 @@ def claim_task_view(request, task_id):
 
     try:
         services.claim_task(user_id, task_id)
-        return JsonResponse({"message": 'Task successfully claimed.'})
+        return JsonResponse({"message": "Task successfully claimed."})
     except Task.DoesNotExist:
-        return HttpResponse("Task does not exist.",
-                            status=404)
+        return HttpResponse("Task does not exist.", status=404)
     except services.TaskAlreadyClaimedException:
-        return HttpResponse("Task does not exist.",
-                            status=400)
+        return HttpResponse("Task does not exist.", status=400)
+
+
+def custom_404(request, exception):
+    return render(request, "404.html", {}, status=404)

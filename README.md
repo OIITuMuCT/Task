@@ -36,6 +36,20 @@
   - [Pessimistic and Optimistic Locking Using Views and a Service Layer](#pessimistic-and-optimistic-locking-using-views-and-a-service-layer)
   - [Error Handling with Custom Error Views](#error-handling-with-custom-error-views)
 
+- [6. Using the Django Template Engine](#6-using-the-django-template-engine)
+  - [Introduction to Django Template Engine](#introduction-to-django-template-engine)
+  - [Creating Your First Django Template](#creating-your-first-django-template)
+  - [Django Template Language: Variables, Tags, and Filters](#django-template-language-variables-tags-and-filters)
+  - [Using Static Files in Django Templates: CSS, JavaScript, Images](#using-static-files-in-django-templates-css-javascript-images)
+  - [Inheritance in Django Templates](#inheritance-in-django-templates)
+  - [Including Templates: Reusing Template Code](#including-templates-reusing-template-code)
+  - [The home page view: Showing Tasks by status](#the-home-page-view-showing-tasks-by-status)
+  - [Custom Template Tags and Filters](#custom-template-tags-and-filters)
+  - [Django Template Context Processors](#django-template-context-processors)
+  - [Debugging Django Templates](#debugging-django-templates)
+  - [Optimizing Template Rendering](#optimizing-template-rendering)
+  - [Securing Django Templates](#securing-django-templates)
+
 ## 1. Creating a **_Task_** model
 
 <!-- start 1 -->
@@ -263,7 +277,7 @@ class Migration(migrations.Migration):
 - The base view:
 
   - **TemplateView:** A view that renders a specified template. This one does not involve any kind of model operations.
-</details>
+  </details>
 
 ### Writing Your First Django View
 
@@ -417,8 +431,8 @@ def can_add_task_to_sprint(task, sprint_id):
 - **SuccessMessageMixin:** Used to display a success message after acting successfully.
 </details>
 
-
 ### URL Configuration in Django
+
 ### Creating URL Patterns for Your Views
 
 <details>
@@ -445,13 +459,120 @@ urlpatterns = [
     path("tasks/<int:pk>/delete/", TaskDeleteView.as_view(), name='task-delete'), # DELETE
 ]
 ```
+
 </details>
 
 ### Using Django’s HttpRequest and HttpResponse Objects
 
 ### Handling Dynamic URLs with Path Converters
+
 ### Understanding Django’s URL Namespace and Naming URL Patterns
+
 ### Introduction to Function-based Views
+
 ### Using Function-based Views with a Service Layer
+
 ### Pessimistic and Optimistic Locking Using Views and a Service Layer
+
 ### Error Handling with Custom Error Views
+
+## 6. Using the Django Template Engine
+
+- ### Introduction to Django Template Engine
+- ### Creating Your First Django Template
+- ### Django Template Language: Variables, Tags, and Filters
+- ### Using Static Files in Django Templates: CSS, JavaScript, Images
+- ### Inheritance in Django Templates
+- ### Including Templates: Reusing Template Code
+- ### The home page view: Showing Tasks by status
+
+```python
+    def task_home(request):
+        # Fetch all tasks at once
+        tasks = Task.objects.filter(status__in=["UNASSIGNED",
+            "IN_PROGRESS", "DONE", "ARCHIVED"])
+        # Initialize dictionaries to hold tasks by status
+        context = defaultdict(list)
+        # Categorize tasks into their respective lists
+        for task in tasks:
+        if task.status == "UNASSIGNED":
+            context["unassigned_tasks"].append(task)
+        elif task.status == "IN_PROGRESS":
+            context["in_progress_tasks"].append(task)
+        elif task.status == "DONE":
+            context["done_tasks"].append(task)
+        elif task.status == "ARCHIVED":
+            context["archived_tasks"].append(task)
+        return render(request, "tasks/home.html", context)
+```
+
+- ### Custom Template Tags and Filters
+- ### Django Template Context Processors
+> tasks/context_processors.py
+```python
+
+    from django.contrib.auth.models import Group
+    def feature_flags(request):
+        user = request.user
+        flags = {
+            "is_priority_feature_enabled": False,
+        }
+        # Ensure the user is authenticated before checking groups
+        if user.is_authenticated:
+            flags["is_priority_feature_enabled"] = user.groups.filter(
+                name="Task Prioritization Beta Testers"
+            ).exists()
+        return flags
+```
+> When using the feature flag in your template, treat it as a variable:
+```html
+    {% if is_priority_feature_enabled %}
+    <!-- Render UI elements related to task prioritization -->
+    {% else %}
+    <!-- Show a teaser: "Stay tuned for our upcoming feature: Task
+    Prioritization!" -->
+    {% endif %}
+```
+> Here is an example of our previous context processor using a cache:
+```python
+    from django.core.cache import cache
+    def feature_flags(request):
+        user = request.user
+        flags = {
+            "is_priority_feature_enabled": False,
+        }
+        # Ensure the user is authenticated before checking groups
+        if user.is_authenticated:
+            # Using the user's id to create a unique cache key
+            cache_key = f"user_{user.id}_is_priority_feature"
+            # Try to get the value from the cache
+            is_priority_feature = cache.get(cache_key)
+            if is_priority_feature is None: # If cache miss
+                is_priority_feature = user.groups.filter(
+                    name="Task Prioritization Beta Testers"
+                ).exists()
+            # Store the result in the cache for, say, 5 minutes (300 seconds)
+            cache.set(cache_key, is_priority_feature, 300)
+            flags["is_priority_feature_enabled"] = is_priority_feature
+        return flags
+```
+
+- ### Debugging Django Templates
+```html
+    <pre>{% debug %}</pre>
+```
+
+- ### Optimizing Template Rendering
+    - #### Minimize Database Queries
+        - **Use select_related and prefetch_related**: When dealing with
+            **ForeignKey** or **OneToOneField**, **select_related** fetches related
+            objects in a single query. When dealing with reverse **ForeignKey** or
+            **ManyToMany** fields, consider using **prefetch_related**. There are some
+            situations where the **select_related** can lead to worse performance
+            since the join query could be more expensive that query each table.
+        - **Avoid using len(queryset):** Instead, use queryset.count() to get the
+            number of items in a queryset without evaluating it. Note that is the
+            query was already evaluated you may prefer to use len instead of count.
+        - **Limit QuerySets:** If you only need a few items, use [:n] slicing. For
+            example, **Article.objects.all()[:5]** only fetches five articles.
+- ### Securing Django Templates

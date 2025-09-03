@@ -5,6 +5,22 @@ from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from .models import Sprint, Task
 
+class TaskAlreadyClaimedException(Exception):
+    pass
+
+@transaction.atomic
+def claim_task(user_id:int, task_id:int) -> None:
+    # Lock the task row to prevent other transactions from claiming it simultaneously
+    task = Task.objects.select_for_update().get(id=task_id)
+    # Check if the task is already claimed
+    if task.owner_id:
+        raise TaskAlreadyClaimedException("Task in already claimed or completed.")
+    # Claim the task
+    task.status = "IN_PROGRESS"
+    task.owner_id = user_id
+    task.save()
+
+
 def can_add_task_to_sprint(task, sprint_id):
     """ 
     Checks if a task can be added to a sprint based on the

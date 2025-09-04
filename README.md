@@ -867,6 +867,7 @@ urlpatterns = [
                 SubscribedEmail.objects.create(email=email_str, task=task)
             return task
     ```
+
     ```html
     <!-- Update templates/tasks/task_detail.html -->
     {% extends "tasks/base.html" %}
@@ -900,10 +901,130 @@ urlpatterns = [
 
 - ### File and Image Upload Field
 
+  ```python
+  class Task(models.Model):
+      …
+      file_upload = models.FileField(upload_to="tasks/files/",
+      null=True, blank=True)
+      image_upload = models.ImageField(upload_to="tasks/images/",
+      null=True, blank=True)
+  ```
+
+  ```shell
+  poetry add Pillow
+  poetry shell
+  python manage.py makemigrations
+  python manage.py migrate
+  ```
+
+  ```python
+  MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
+  MEDIA_URL = "/media/"
+
+
+  class TaskForm(forms.ModelForm):
+      …
+      class Meta:
+          model = Task
+          fields = [
+              "title", "description", "status",
+              "watchers", "file_upload", "image_upload"
+          ]
+  ```
+
+  ```python
+  # taskmanager/urls.py
+  from django.conf import settings
+  from django.conf.urls.static import static
+  urlpatterns = [
+      …
+  ]
+  if settings.DEBUG:
+      urlpatterns += static(settings.MEDIA_URL,
+      document_root=settings.MEDIA_ROOT)
+  ```
+
+  ```html
+  <!-- # templates/tasks/task_details.html -->
+  {% if task.file_upload %}
+  <a href="{{ task.file_upload.url }}" download>Download File</a>
+  {% endif %} {% if task.image_upload %}
+  <div>
+    <img
+      src="{{ task.image_upload.url }}"
+      alt="Task Image"
+      style="max-width: 300px;"
+    />
+  </div>
+  {% endif %}
+  ```
+
 - ### Data Validation with Django Forms
 
-- ### Displaying Form Errors
+  ```python
+  from django import forms
+  from django.core.validators import (
+      MaxValueValidator,
+      EmailValidator,         # Validates that a value is a valid email address.
+      URLValidator,           # Validates that a value is a valid URL.
+      RegexValidator,         # Validates a value based on a provided regular expression
+      MinLengthValidator,     # Validates that a value doesn’t exceed a certain length.
+      MinValueValidator,      # Validates that a value is at least a specified minimum.
+      MaxValueValidator,      # Validates that a value doesn’t exceed a specified maximum.
+      FileExtensionValidator, # Validates that a file has a specific extension.
+  )
 
+  class TaskForm(forms.Form):
+      priority = forms.IntegerField(validators=[MaxValueValidator(100)])
+  ```
+
+  - Clean methods
+
+  ```python
+      def clean_email(self) -> str:
+          email = self.cleaned_data.get("email")
+          email = email.strip()
+          validate_email(email)
+          return email
+
+      def clean(self) -> dict:
+        cleaned_data = super().clean()
+        # perform validations or cleanups
+        return cleaned_data
+  ```
+
+  - ModelForm Validation
+    - max_length=100,
+
+- ### Displaying Form Errors
+  ```html
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-group mb-3">
+          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+          {{ field|add_class:"form-control" }}
+          {% if field.errors %}
+          <div class="alert alert-danger mt-2">
+            {% for error in field.errors %}
+              <p class="mb-0"><strong>{{ error }}</strong></p>
+          {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          <ul>
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  ```
 - ### Advanced Form Handling: ModelForms and Formsets
 
 - ### Preventing Double Submission with Forms

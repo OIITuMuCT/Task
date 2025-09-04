@@ -25,6 +25,8 @@ class Task(models.Model):
     owner = models.ForeignKey(
         User, related_name="owned_tasks", on_delete=models.SET_NULL, null=True
     )
+    file_upload = models.FileField(upload_to="tasks/files", null=True, blank=True)
+    image_upload = models.ImageField(upload_to="tasks/images/", null=True, blank=True)
 
     class Meta:
         constraints = [

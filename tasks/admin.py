@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.http.request import HttpRequest
 
-from tasks.models import Task
+from tasks.models import Epic, Task, Sprint
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
@@ -28,4 +28,11 @@ class TaskAdmin(admin.ModelAdmin):
             return True
         return False
 
-# admin.site.register(Task, TaskAdmin)
+
+class SprintAdmin(admin.ModelAdmin): ...
+
+
+class EpicAdmin(admin.ModelAdmin): ...
+
+admin.site.register(Sprint, SprintAdmin)
+admin.site.register(Epic, EpicAdmin)

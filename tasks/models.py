@@ -80,3 +80,6 @@ class Sprint(models.Model):
 class SubscribedEmail(models.Model):
     email = models.EmailField()
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="watchers")
+
+class FormSubmission(models.Model):
+    uuid = models.UUIDField(unique=True)

@@ -2,24 +2,13 @@ from datetime import date, datetime
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.db import models, transaction
+from django.db.models.functions import TruncDate
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
-from .models import Sprint, Task
+from .models import Epic, Sprint, Task
 
 class TaskAlreadyClaimedException(Exception):
     pass
-
-@transaction.atomic
-def claim_task(user_id:int, task_id:int) -> None:
-    # Lock the task row to prevent other transactions from claiming it simultaneously
-    task = Task.objects.select_for_update().get(id=task_id)
-    # Check if the task is already claimed
-    if task.owner_id:
-        raise TaskAlreadyClaimedException("Task in already claimed or completed.")
-    # Claim the task
-    task.status = "IN_PROGRESS"
-    task.owner_id = user_id
-    task.save()
 
 
 def can_add_task_to_sprint(task, sprint_id):
@@ -36,13 +25,14 @@ def get_task_by_date(by_date: date) -> list[Task]:
         date_created=by_date
     )
 
+
 def create_task_and_add_to_sprint(task_data: dict[str, str], sprint_id: int, creator: User) -> Task:
     """
     Create a new task and associate it with a sprint. 
     """
     # Fetch the sprint by its ID
     sprint = Sprint.objects.get(id=sprint_id)
-    
+
     # Get te current date and time
     now = datetime.now()
     # Check if the current date and time is within the sprint's start and end dates
@@ -60,7 +50,21 @@ def create_task_and_add_to_sprint(task_data: dict[str, str], sprint_id: int, cre
         sprint.tasks.add(task)
     return task
 
+
 def send_contact_email(
         subject: str, message: str, from_email: str, to_email: str
     ) -> None:
     send_mail(subject, message, from_email, [to_email])
+
+def get_epic_by_id(epic_id: int) -> Epic | None:
+    return Epic.objects.filter(pk=epic_id).first()
+
+
+def get_tasks_for_epic(epic: Epic) -> list[Task]:
+    return Task.objects.filter(epics=epic)
+
+
+def save_tasks_for_epic(epic: Epic, tasks: list[Task]) -> None:
+    for task in tasks:
+        task.save()
+        task.epics.add(epic)

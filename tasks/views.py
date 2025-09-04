@@ -18,7 +18,7 @@ from .models import Task
 from .mixins import SprintTaskMixin
 from . import services
 from .services import create_task_and_add_to_sprint
-from .forms import TaskForm, ContactForm
+from .forms import TaskForm, ContactForm, EpicFormSet
 
 
 class TaskListView(ListView):
@@ -167,3 +167,18 @@ class ContactFormView(FormView):
         )
 
         return super().form_valid(form)
+
+def manage_epic_tasks(request, epic_pk):
+    epic = services.get_epic_by_id(epic_pk)
+    if not epic:
+        raise Http404('Epic does not exist')
+    if request.method == "POST":
+        formset = EpicFormSet(request.POST, queryset=services.get_tasks_for_epic(epic))
+        if formset.is_valid():
+            tasks = formset.save(commit=False)
+            services.save_tasks_for_epic(epic, tasks)
+            formset.save_m2m() # Handle many-to-many relations if there are any
+            return redirect('tasks:task-list')
+    else:
+        formset = EpicFormSet(queryset=services.get_tasks_for_epic(epic))
+    return render(request, 'tasks/manage_epic.html', {'formset': formset, 'epic': epic})

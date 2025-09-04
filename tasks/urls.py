@@ -13,7 +13,8 @@ from .views import (
     example_view,
     task_by_date,
     task_home,
-    contact_form_view
+    contact_form_view,
+    manage_epic_tasks
 )
 
 app_name = "tasks"  # This is for namespacing the URLs
@@ -45,4 +46,5 @@ urlpatterns = [
         TemplateView.as_view(template_name="tasks/contact_success.html"),
         name="contact-success",
     ),
+    path("epic/<int:epic_pk>/", manage_epic_tasks, name="task-batch-create"),
 ]

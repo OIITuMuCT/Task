@@ -706,14 +706,197 @@ urlpatterns = [
             subject = form.cleaned_data.get("subject")
             message = form.cleaned_data.get("message")
             from_email = form.cleaned_data.get("from_email")
-            services.send_contact_email(subject, message, from_email, 
+            services.send_contact_email(subject, message, from_email,
             ["your-email@example.com"])
             return super().form_valid(form)
+  ```
+
+  ```HTML
+  <!--tasks/contact_form.html-->
+  {% extends "tasks/base.html" %}
+  {% load widget_tweaks %}
+
+  {% block content %}
+  <div class="d-flex justify-content-center align-items-center vh-100">
+      <div class="w-50">
+          <div class="card">
+              <div class="card-header">
+                  <h2 class="text-center">Contact Us!</h2>
+              </div>
+              <div class="card-body">
+                  <form action="{% url "tasks:contact" %}" method="post">
+                      {% csrf_token %}
+                      {% for field in form %}
+                      <div class="mb-3">
+                          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                          {% if field.errors %}
+                          <div class="alert alert-danger">
+                              {{ field.errors }}
+                          </div>
+                          {% endif %}
+                          {{ field|add_class:"form-control"}}
+                      </div>
+                      {% endfor %}
+                      <button type="submit" class="btn btn-primary w-100">Send</button>
+                  </form>
+              </div>
+          </div>
+      </div>
+  </div>
+  {% endblock %}
+  ```
+
+  ```HTML
+  <!-- tasks/contact_success.html -->
+    {% extends "base.html" %}
+    {% block content %}
+      <div class="container">
+        <h1>Contact Message Sent!</h1>
+        <p>Thank you for reaching out! We have received your message and will respond as soon as possible.</p>
+        <a href="{% url 'home' %}">Return Home</a>
+      </div>
+    {% endblock %}
+  ```
+
+  ```python
+    #  send to email
+    from django.shortcuts import render, redirect, reverse
+    from .forms import ContactForm
+    from .services import send_contact_email
+    def contact_form_view(request):
+        if request.method == 'POST':
+            form = ContactForm(request.POST)
+            if form.is_valid():
+                subject = form.cleaned_data.get('subject')
+                message = form.cleaned_data.get('message')
+                from_email = form.cleaned_data.get('from_email')
+            send_contact_email(subject, message, from_email, 'your-email@example.com')
+            return redirect(reverse('contact-success'))
+        else:
+            form = ContactForm()
+        return render(request, 'contact_form.html', {'form': form})
   ```
 
   </details>
 
 - ### Working with Form Fields
+
+  ```HTML
+    {{ form.as_div }} Input elements will be wrapped between divs.
+    {{ form.as_table }} Fields will be rendered to a table
+    {{ form.as_p }} Input elements will be wrapped between p tags.
+    {{ form.as_ul }} Inputs will be rendered using the HTML unordered list.
+  ```
+
+  - Custom form fields
+
+    - **to_python(self, value):** This method converts the value into the
+      correct Python datatype. For example, if you have a custom field that
+      deals with numeric data, you would use this method to ensure that the
+      data is converted into a Python integer or float.
+    - **validate(self, value):** This method runs field-specific validation
+      rules. You could raise the **ValidationError** from here if the validation
+      fails.
+    - **clean(self, value):** This method is used to provide the **cleaned**
+      data, which is the result of calling **to_python()** and **validate()**. You
+      usually don’t need to override this unless you need to change its
+      behavior fundamentally.
+    - **bound_data(self, data, initial):** This returns the value that
+      should be shown for this field when rendering it with the specified
+      initial data and the submitted data. This method is typically used for
+      fields where the user’s input is not necessarily the same as the output.
+    - **prepare_value(self, value):** Converts Python objects to query
+      string values.
+    - **widget_attrs(self, widget):** This adds any HTML attributes needed
+      for your widget based on the field.
+
+    ```python
+    from typing import Any
+    from django import forms
+    from django.core.validators import EmailValidator
+
+    email_validator = EmailValidator(message="One or more email addresses are not valid")
+
+    class EmailsListField(forms.CharField):
+        def to_python(self, value):
+            "Normalize data to a list of strings."
+            # Return an empty list fi no input was given.
+            if not value:
+                return []
+            return [email.strip() for email in value.split(',')]
+        def validate(self, value: Any) -> None:
+            "Check if value consists only of valid emails."
+            super().validate(value)
+            for email in value:
+                email_validator(email)
+    ```
+
+    ```python
+    # tasks/models.py and add the new model:
+    class SubscribedEmail(models.Model):
+        email = models.EmailField()
+        task = models.ForeignKey(Task, on_delete=models.CASCADE,
+        related_name="watchers")
+    ```
+
+    ```python
+    from django import forms
+    from tasks.fields import EmailsListField
+    from .models import SubscribedEmail, Task
+    class TaskForm(forms.ModelForm):
+        watchers = EmailsListField(required=False)
+        class Meta:
+            model = Task
+            fields = ["title", "description", "status", "watchers"]
+
+        def __init__(self, *args, **kwargs):
+            super(TaskForm, self).__init__(*args, **kwargs)
+            # Check if an instance is provided and populate watchers field
+            if self.instance and self.instance.pk:
+                self.fields['watchers'].initial = ', '.join(email.email for email in self.instance.watchers.all())
+
+        def save(self, commit=True):
+            # First, save the Task instance
+            task = super().save(commit)
+            # If commit is True, save the associated emails
+            if commit:
+            # First, remove the old emails associated with this task
+                task.watchers.all().delete()
+            # Add the new emails to the Email model
+            for email_str in self.cleaned_data["watchers"]:
+                SubscribedEmail.objects.create(email=email_str, task=task)
+            return task
+    ```
+    ```html
+    <!-- Update templates/tasks/task_detail.html -->
+    {% extends "tasks/base.html" %}
+
+    {% block content %}
+    <div class="vh-100 d-flex justify-content-center align-items-center">
+      <div class="container text-center">
+        <h1 class="mb-4">{{ task.title }}</h1>
+        <div class="card">
+          <div class="card-body">
+            <h2 class="card-title">Description</h2>
+            <p class="card-text">{{ task.description }}</p>
+            <!--Emails List-->
+            <h3>Watchers</h3>
+            <ul class="list-unstyled">
+              {% for watcher in task.watchers.all %}
+              <li>{{ watcher.email }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        <div class="mt-4 d-inline-block">
+          <a href="{% url "tasks:task-update" task.id %}" class="btn btn-primary me-2">Edit</a>
+          <a href="{% url "tasks:task-delete" task.id %}" class="btn btn-danger">Delete</a>
+          <a href="{% url "tasks:task-list" %}" class="btn btn-secondary">Back to List</a>
+        </div>
+      </div>
+    </div>
+    {% endblock %}
+    ```
 
 - ### File and Image Upload Field
 

@@ -27,3 +27,13 @@
   </div>
 </div>
 {% endblock %}
+{% block extra_javascript %}
+<script>
+  document.getElementById('taskForm').addEventListener('submit',
+  function(){
+    this.querySelector('button[type="submit"]').disabled = true;
+  });
+</script>
+
+{% endblock %}
+

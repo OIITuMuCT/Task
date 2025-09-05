@@ -1185,73 +1185,348 @@ urlpatterns = [
   6. Navigate to http://localhost:8000/accounts/register/ and you should see the registration form.
 
 - ### Authenticating Users: Login and Logout
-    1. Open the **accounts/urls.py** and add two new paths
 
-        ```python
-          from django.urls import path
-          from django.contrib.auth.views import LoginView, LogoutView
-          from . import views
+  1. Open the **accounts/urls.py** and add two new paths
 
-          urlpatterns = [
-              path("register/", views.register, name="register"),
-              # Add the following line
-              path("login/", LoginView.as_view(template_name="accounts/login.html"), name="login")
-              path("logout/", LogoutView.as_view(), name="logout"),
-          ]
-        ```
+     ```python
+       from django.urls import path
+       from django.contrib.auth.views import LoginView, LogoutView
+       from . import views
 
-    2. Create a new file in **templates/accounts/login.html**
+       urlpatterns = [
+           path("register/", views.register, name="register"),
+           # Add the following line
+           path("login/", LoginView.as_view(template_name="accounts/login.html"), name="login")
+           path("logout/", LogoutView.as_view(), name="logout"),
+       ]
+     ```
 
-        ```html
+  2. Create a new file in **templates/accounts/login.html**
 
-          {% extends 'tasks/base.html' %}
-          {% load static %}
-          {% block content %}
-          <div class="container">
-            <div class="row justify-content-center">
-              <div class="col-md-6">
-                <div class="card mt-5">
-                  <div class="card-body">
-                    <h2 class="text-center">Login</h2>
-                    <form method="post" class="mt-3">
-                      {% csrf_token %}
-                      <div class="mb-3">
-                        <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="{{ form.username.id_for_label }}" name="{{ form.username.name}}">
-                      </div>
-                      <div class="mb-3">
-                        <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="{{ form.password.id_for_label }}" name="{{ form.password.name}}">
-                      </div>
-                      <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Login</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          {% endblock %}
-        ```
-    3. The logout view we added in the **urlpatterns** will redirect the user to a URL
-        ```python
-          # taskmanager/settings.py
+     ```html
+     {% extends 'tasks/base.html' %} {% load static %} {% block content %}
+     <div class="container">
+       <div class="row justify-content-center">
+         <div class="col-md-6">
+           <div class="card mt-5">
+             <div class="card-body">
+               <h2 class="text-center">Login</h2>
+               <form method="post" class="mt-3">
+                 {% csrf_token %}
+                 <div class="mb-3">
+                   <label
+                     for="{{ form.username.id_for_label }}"
+                     class="form-label"
+                     >Username</label
+                   >
+                   <input
+                     type="text"
+                     class="form-control"
+                     id="{{ form.username.id_for_label }}"
+                     name="{{ form.username.name}}"
+                   />
+                 </div>
+                 <div class="mb-3">
+                   <label
+                     for="{{ form.password.id_for_label }}"
+                     class="form-label"
+                     >Password</label
+                   >
+                   <input
+                     type="password"
+                     class="form-control"
+                     id="{{ form.password.id_for_label }}"
+                     name="{{ form.password.name}}"
+                   />
+                 </div>
+                 <div class="d-grid gap-2">
+                   <button type="submit" class="btn btn-primary">Login</button>
+                 </div>
+               </form>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+     {% endblock %}
+     ```
 
-          LOGIN_REDIRECT_URL = "tasks:task-home"
-          LOGOUT_REDIRECT_URL = "accounts:login"
-        ```
-    4. Open the **templates/tasks/_header.html** and update it with the new authentication links
-        ```html
-          <!-- Login/Logout links -->
-          {% if user.is_authenticated %}
-            <a href="{% url 'accounts:logout' %}" class="btn btn-danger ml-2" role="button">Logout</a>
-          {% else %}
-            <a href="{% url 'accounts:login' %}" class="btn btn-info ml-2" role="button">Login</a>
-          {% endif %}
-        ```
+  3. The logout view we added in the **urlpatterns** will redirect the user to a URL
+
+     ```python
+       # taskmanager/settings.py
+
+       LOGIN_REDIRECT_URL = "tasks:task-home"
+       LOGOUT_REDIRECT_URL = "accounts:login"
+     ```
+
+  4. Open the **templates/tasks/\_header.html** and update it with the new authentication links
+     ```html
+     <!-- Login/Logout links -->
+     {% if user.is_authenticated %}
+     <a
+       href="{% url 'accounts:logout' %}"
+       class="btn btn-danger ml-2"
+       role="button"
+       >Logout</a
+     >
+     {% else %}
+     <a
+       href="{% url 'accounts:login' %}"
+       class="btn btn-info ml-2"
+       role="button"
+       >Login</a
+     >
+     {% endif %}
+     ```
+
 - ### Managing User Sessions
 - ### Password Management in Django: Hashing and Password Reset
+
+  1. Open the **accounts/urls.py** and add the new paths:
+
+     ```python
+       from django.urls import path, reverse_lazy
+       from django.contrib.auth.views import (
+           LoginView,
+           LogoutView,
+           PasswordChangeView,
+           PasswordChangeDoneView,
+           PasswordResetView,
+           PasswordResetDoneView,
+           PasswordResetConfirmView,
+           PasswordResetCompleteView,
+       )
+       from . import views
+       from tasks.views import TaskListView
+
+       app_name = "accounts"
+
+       urlpatterns = [
+           path("register/", views.register, name="register"),
+           path("profile/", TaskListView.as_view(), name="profile"),
+           path(
+               "login/", LoginView.as_view(template_name="accounts/login.html"), name="login"
+           ),
+           path("logout/", LogoutView.as_view(), name="logout"),
+           path(
+               "password_change/",
+               PasswordChangeView.as_view(
+                   success_url=reverse_lazy("accounts:password_change_done"),
+                   template_name="accounts/password_change_form.html",
+               ),
+               name="password_change",
+           ),
+           path(
+               "password_change/done/",
+               PasswordChangeDoneView.as_view(
+                   template_name="accounts/password_change_done.html"
+               ),
+               name="password_change_done",
+           ),
+           path(
+               "password_reset/",
+               PasswordResetView.as_view(
+                   email_template_name="accounts/custom_password_reset_email.html"
+               ),
+               name="password_reset",
+           ),
+           path(
+               "password_reset/done/",
+               PasswordResetDoneView.as_view(),
+               name="password_reset_done",
+           ),
+           path(
+               "password_reset/<uidb64>/<token>/",
+               PasswordResetConfirmView.as_view(),
+               name="password_reset_confirm",
+           ),
+           path(
+               "reset/done/",
+               PasswordResetCompleteView.as_view(),
+               name="password_reset_complete",
+           ),
+       ]
+     ```
+
+  2. Add in **templates/accounts/password_change.html**
+
+     ```html
+     {% extends "tasks/base.html" %} {% load widget_tweaks %} {% block content%}
+     <div class="container my-5">
+       <div class="row">
+         <div class="col-lg-6 offset-lg-3">
+           <div class="card">
+             <div class="card-body">
+               <h2 class="card-title">Change Password</h2>
+               <form method="post" class="mt-4">
+                 {% csrf_token %}
+                 <div class="mb-3">
+                   <!-- Assuming you have fields like 'old_password',
+                     'new_password', 'confirm_new_password' in your form -->
+                   <label
+                     for="{{ form.old_password.id_for_label }}"
+                     class="form-label"
+                     >Old Password</label
+                   >
+                   {{ form.old_password|add_class:"form-control" }}
+                 </div>
+                 <div class="mb-3">
+                   <label
+                     for="{{ form.new_password.id_for_label }}"
+                     class="form-label"
+                     >New Password</label
+                   >
+                   {{ form.new_password1|add_class:"form-control" }}
+                 </div>
+                 <div class="mb-3">
+                   <label
+                     for="{{ form.confirm_new_password.id_for_label }}"
+                     class="form-label"
+                     >Confirm New Password</label
+                   >
+                   {{ form.new_password2|add_class:"form-control" }}
+                 </div>
+                 <button type="submit" class="btn btn-primary">
+                   Change Password
+                 </button>
+               </form>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+     ```
+
+  3. Add in **templates/accounts/password_change_done.html**
+     ```html
+     {% extends "tasks/base.html" %} {% block content %}
+     <div class="container my-5">
+       <div class="row">
+         <div class="col-lg-6 offset-lg-3">
+           <div class="card">
+             <div class="card-body text-center">
+               <h2 class="card-title">Password Change Successful</h2>
+               <p class="card-text">
+                 Your password has been changed successfully!
+               </p>
+               <a href="{% url 'accounts:login' %}" class="btn btn-primary"
+                 >Login Again</a
+               >
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+     {% endblock %}
+     ```
+  4. Create a new file in **templates/accounts/password_reset_form.html**
+     ```html
+     {% extends "tasks/base.html" %} {% block content %}
+     <div class="container mt-5">
+       <div class="row justify-content-center">
+         <div class="col-md-6">
+           <div class="card">
+             <div class="card-header bg-primary text-white">
+               <h2>Reset Password</h2>
+             </div>
+             <div class="card-body">
+               <form method="post">
+                 {% csrf_token %}
+                 <div class="mb-3">
+                   {{ form.email.label_tag }} {{ form.email }} {% if
+                   form.email.errors %}
+                   <div class="alert alert-danger mt-2">
+                     {{ form.email.errors }}
+                   </div>
+                   {% endif %}
+                 </div>
+                 <button type="submit" class="btn btn-primary">
+                   Reset Password
+                 </button>
+               </form>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+     {% endblock %}
+     ```
+  5. Create a new file in **templates/accounts/custom_password_reset_email.html**
+     ```html
+     {% autoescape off %} Hi {{ user.username }}, You're receiving this email
+     because you requested a password reset for your account. Please go to the
+     following page and choose a new password: {{ protocol }}://{{ domain }}{%
+     'accounts:password_reset_confirm' uidb64=uid token=token %} url Thanks for
+     using our site! {% endautoescape %}
+     ```
+  6. create a new file in **accounts/templates/password_reset_confirm_form.html**
+     ```html
+     {% extends "tasks/base.html" %} {% block content %}
+     <div class="container mt-5">
+       <div class="row justify-content-center">
+         <div class="col-md-6">
+           <div class="card">
+             <div class="card-header bg-primary text-white">
+               <h3>Set New Password</h3>
+             </div>
+             <div class="card-body">
+               <form method="post">
+                 {% csrf_token %}
+                 <div class="mb-3">
+                   {{ form.new_password1.label_tag }} {{ form.new_password1 }}{%
+                   if form.new_password1.errors %}
+                   <div class="alert alert-danger mt-2">
+                     {{ form.new_password1.errors }}
+                   </div>
+                   {% endif %}
+                 </div>
+                 <div class="mb-3">
+                   {{ form.new_password2.label_tag }} {{ form.new_password2 }}
+                   {% if form.new_password2.errors %}
+                   <div class="alert alert-danger mt-2">
+                     {{ form.new_password2.errors }}
+                   </div>
+                   {% endif %}
+                 </div>
+                 <button type="submit" class="btn btn-primary">
+                   Change Password
+                 </button>
+               </form>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+     {% endblock %}
+     ```
+  7. Create a new file in **templates/accounts/password_reset_complete.html**
+     ```html
+     {% extends "base.html" %} {% load static %} {% block content %}
+     <div class="container mt-5">
+       <div class="row justify-content-center">
+         <div class="col-md-6">
+           <div class="card">
+             <div class="card-body text-center">
+               <h2 class="card-title">Password Reset Successful</h2>
+               <p class="card-text">
+                 Your password has been reset successfully. You can now log in
+                 using your new password.
+               </p>
+               <a
+                 href="{% url 'accounts:login' %}"
+                 class="btn btn-primary mt-
+          3"
+                 >Login</a
+               >
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+     {% endblock %}
+     ```
+
 - ### User Authorization: Permissions and GroupsProtecting Views with Login Required Decorators
 - ### Multi-tenant authentication with Custom Django’s User Model
 - ### Security Best Practices in Django

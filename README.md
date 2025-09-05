@@ -52,6 +52,7 @@
   - [Securing Django Templates](#securing-django-templates)
 
 - [7. Forms in Django](#7-forms-in-django)
+
   - [Understanding Django Forms](#understanding-django-forms)
   - [Creating Your First Django Form](#creating-your-first-django-form)
   - [Rendering Forms in Templates](#rendering-forms-in-templates)
@@ -62,6 +63,19 @@
   - [Displaying Form Errors](#displaying-form-errors)
   - [Advanced Form Handling: ModelForms and Formsets](#advanced-form-handling-modelforms-and-formsets)
   - [Preventing Double Submission with Forms](#preventing-double-submission-with-forms)
+
+- [8. User Authentication and Authorization in Django](#8-user-authentication-and-authorization-in-django)
+
+  - [Understanding Django’s Authentication System](#understanding-djangos-authentication-system)
+  - [Introduction to Django’s Middleware](#introduction-to-djangos-middleware)
+  - [Understanding Django Middleware](#understanding-django-middleware)
+  - [User Registration with Django’s User Model](#user-registration-with-djangos-user-model)
+  - [Authenticating Users: Login and Logout](#authenticating-users-login-and-logout)
+  - [Managing User Sessions](#managing-user-sessions)
+  - [Password Management in Django: Hashing and Password Reset](#password-management-in-django-hashing-and-password-reset)
+  - [User Authorization: Permissions and GroupsProtecting Views with Login Required Decorators](#user-authorization-permissions-and-groupsprotecting-views-with-login-required-decorators)
+  - [Multi-tenant authentication with Custom Django’s User Model](#multi-tenant-authentication-with-custom-djangos-user-model)
+  - [Security Best Practices in Django](#security-best-practices-in-django)
 
 ## 1. Creating a **_Task_** model
 
@@ -998,33 +1012,246 @@ urlpatterns = [
 
 - ### Displaying Form Errors
   ```html
-    <form method="post">
-      {% csrf_token %}
-      {% for field in form %}
-        <div class="form-group mb-3">
-          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-          {{ field|add_class:"form-control" }}
-          {% if field.errors %}
-          <div class="alert alert-danger mt-2">
-            {% for error in field.errors %}
-              <p class="mb-0"><strong>{{ error }}</strong></p>
-          {% endfor %}
-          </div>
-          {% endif %}
-        </div>
-      {% endfor %}
-      {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-          <ul>
-            {% for error in form.non_field_errors %}
-              <li>{{ error }}</li>
-            {% endfor %}
-          </ul>
-        </div>
+  <form method="post">
+    {% csrf_token %} {% for field in form %}
+    <div class="form-group mb-3">
+      <label for="{{ field.id_for_label }}" class="form-label"
+        >{{ field.label }}</label
+      >
+      {{ field|add_class:"form-control" }} {% if field.errors %}
+      <div class="alert alert-danger mt-2">
+        {% for error in field.errors %}
+        <p class="mb-0"><strong>{{ error }}</strong></p>
+        {% endfor %}
+      </div>
       {% endif %}
-      <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
+    </div>
+    {% endfor %} {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+      <ul>
+        {% for error in form.non_field_errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
   ```
 - ### Advanced Form Handling: ModelForms and Formsets
 
 - ### Preventing Double Submission with Forms
+
+## 8. User Authentication and Authorization in Django
+
+- [Understanding Django’s Authentication System](#understanding-djangos-authentication-system)
+- [Introduction to Django’s Middleware](#introduction-to-djangos-middleware)
+- [Understanding Django Middleware](#understanding-django-middleware)
+- [User Registration with Django’s User Model](#user-registration-with-djangos-user-model)
+- [Authenticating Users: Login and Logout](#authenticating-users-login-and-logout)
+- [Managing User Sessions](#managing-user-sessions)
+- [Password Management in Django: Hashing and Password Reset](#password-management-in-django-hashing-and-password-reset)
+- [User Authorization: Permissions and GroupsProtecting Views with Login Required Decorators](#user-authorization-permissions-and-groupsprotecting-views-with-login-required-decorators)
+- [Multi-tenant authentication with Custom Django’s User Model](#multi-tenant-authentication-with-custom-djangos-user-model)
+- [Security Best Practices in Django](#security-best-practices-in-django)
+
+- ### Understanding Django’s Authentication System
+
+  ```python
+     import time
+     import logginglogger = logging.getLogger(__name__)
+     class RequestTimeMiddleware:
+         def __init__(self, get_response):
+             self.get_response = get_response
+
+         def __call__(self, request):
+             # Start the timer when a request is received
+             start_time = time.time()
+             # Process the request and get the response
+             response = self.get_response(request)
+             # Calculate the time taken to process the request
+             duration = time.time() - start_time
+             # Log the time taken
+             logger.info(f"Request to {request.path} took {duration:.2f}
+             seconds.")
+             return response
+  ```
+
+- ### Introduction to Django’s Middleware
+- ### Understanding Django Middleware
+
+  ```python
+    import logging
+    import time
+
+    logger = logging.getLogger(__name__)
+
+
+    class RequestTimeMiddleware:
+        def __init__(self, get_response):
+            self.get_response = get_response
+
+        def __call__(self, request):
+            # Start the timer when a request is received
+            start_time = time.time()
+
+            # Process the request and get the response
+            response = self.get_response(request)
+
+            # Calculate the time taken to process the request
+            duration = time.time() - start_time
+
+            # Log the time taken
+            logger.info(f"Request to {request.path} took {duration:.2f} seconds.")
+
+            return response
+  ```
+
+- ### User Registration with Django’s User Model
+
+  1. Open the project **settings.py** and add newly created application to the **INSTALLED_APPS**.
+  2. Create registration view in the **accounts/views.py**
+     ```python
+       from django.shortcuts import render, redirect
+       from django.contrib.auth.forms import UserCreationForm
+       from django.contrib import messages
+       def register(request):
+           if request.method == "POST":
+               form = UserCreationForm(request.POST)
+               if form.is_valid():
+                   form.save()
+                   username = form.cleaned_data.get("username")
+                   messages.success(request, f"Account created for {username}!")
+                   return redirect("login") # Redirect to the login page or any other page you want
+           else:
+               form = UserCreationForm()
+           return render(request, "accounts/register.html", {"form": form})
+     ```
+  3. Create the **templates/accounts/register.html**
+
+     ```html
+     {% extends "tasks/base.html" %} {% block content %}
+     <div class="container">
+       <div class="row justify-content-center">
+         <div class="col-md-6">
+           <h2 class="mb-4">Register</h2>
+           <form action="" method="post" class="border p-4 rounded">
+             {% csrf_token %} {% for field in form %}
+             <div class="mb-3">
+               <label for="{{field.id_for_label}}" class="form-label"
+                 >{{ field.label }}</label
+               >
+               {{ field }} {% if field.help_text %}
+               <small class="form-text text-muted">{{ field.help_text }}</small>
+               {% endif %} {% for error in field.errors %}
+               <div class="text-danger">{{ error }}</div>
+               {% endfor %}
+             </div>
+             {% endfor %}
+             <button type="submit" class="btn btn-primary">Register</button>
+           </form>
+         </div>
+       </div>
+     </div>
+     {% endblock %}
+     ```
+
+  4. Need to set up URLs, open **accounts/urls.py**
+
+     ```python
+       from django.urls import path
+       from . import views
+
+       app_name = "accounts"
+
+       urlpatterns = [
+           path("register/", views.register, name="register"),
+       ]
+     ```
+
+  5. Open the project **taskmanager/urls.py** and add the accounts URLs.
+
+     ```python
+       from django.contrib import admin
+       from django.urls import include, path
+
+       urlpatterns = [
+           path("admin/", admin.site.urls),
+           path("accounts/", include("accounts.urls")),
+           path("", include("tasks.urls")),
+       ]
+     ```
+
+  6. Navigate to http://localhost:8000/accounts/register/ and you should see the registration form.
+
+- ### Authenticating Users: Login and Logout
+    1. Open the **accounts/urls.py** and add two new paths
+
+        ```python
+          from django.urls import path
+          from django.contrib.auth.views import LoginView, LogoutView
+          from . import views
+
+          urlpatterns = [
+              path("register/", views.register, name="register"),
+              # Add the following line
+              path("login/", LoginView.as_view(template_name="accounts/login.html"), name="login")
+              path("logout/", LogoutView.as_view(), name="logout"),
+          ]
+        ```
+
+    2. Create a new file in **templates/accounts/login.html**
+
+        ```html
+
+          {% extends 'tasks/base.html' %}
+          {% load static %}
+          {% block content %}
+          <div class="container">
+            <div class="row justify-content-center">
+              <div class="col-md-6">
+                <div class="card mt-5">
+                  <div class="card-body">
+                    <h2 class="text-center">Login</h2>
+                    <form method="post" class="mt-3">
+                      {% csrf_token %}
+                      <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="{{ form.username.id_for_label }}" name="{{ form.username.name}}">
+                      </div>
+                      <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="{{ form.password.id_for_label }}" name="{{ form.password.name}}">
+                      </div>
+                      <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endblock %}
+        ```
+    3. The logout view we added in the **urlpatterns** will redirect the user to a URL
+        ```python
+          # taskmanager/settings.py
+
+          LOGIN_REDIRECT_URL = "tasks:task-home"
+          LOGOUT_REDIRECT_URL = "accounts:login"
+        ```
+    4. Open the **templates/tasks/_header.html** and update it with the new authentication links
+        ```html
+          <!-- Login/Logout links -->
+          {% if user.is_authenticated %}
+            <a href="{% url 'accounts:logout' %}" class="btn btn-danger ml-2" role="button">Logout</a>
+          {% else %}
+            <a href="{% url 'accounts:login' %}" class="btn btn-info ml-2" role="button">Login</a>
+          {% endif %}
+        ```
+- ### Managing User Sessions
+- ### Password Management in Django: Hashing and Password Reset
+- ### User Authorization: Permissions and GroupsProtecting Views with Login Required Decorators
+- ### Multi-tenant authentication with Custom Django’s User Model
+- ### Security Best Practices in Django

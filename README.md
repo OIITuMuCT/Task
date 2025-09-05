@@ -1284,7 +1284,9 @@ urlpatterns = [
 - ### Password Management in Django: Hashing and Password Reset
 
   1. Open the **accounts/urls.py** and add the new paths:
-
+     <details>
+     <summary>Click to expand</summary>
+     
      ```python
        from django.urls import path, reverse_lazy
        from django.contrib.auth.views import (
@@ -1348,9 +1350,11 @@ urlpatterns = [
            ),
        ]
      ```
-
+     </details>
   2. Add in **templates/accounts/password_change.html**
-
+     <details>
+      <summary>Click to expand</summary>
+      
      ```html
      {% extends "tasks/base.html" %} {% load widget_tweaks %} {% block content%}
      <div class="container my-5">
@@ -1398,7 +1402,12 @@ urlpatterns = [
      </div>
      ```
 
+     </details>
+
   3. Add in **templates/accounts/password_change_done.html**
+     <details>
+      <summary>Click to expand</summary>
+
      ```html
      {% extends "tasks/base.html" %} {% block content %}
      <div class="container my-5">
@@ -1420,7 +1429,13 @@ urlpatterns = [
      </div>
      {% endblock %}
      ```
+
+     </details>
+
   4. Create a new file in **templates/accounts/password_reset_form.html**
+      <details>
+      <summary>Click to expand</summary>
+
      ```html
      {% extends "tasks/base.html" %} {% block content %}
      <div class="container mt-5">
@@ -1452,6 +1467,9 @@ urlpatterns = [
      </div>
      {% endblock %}
      ```
+
+     </details>
+
   5. Create a new file in **templates/accounts/custom_password_reset_email.html**
      ```html
      {% autoescape off %} Hi {{ user.username }}, You're receiving this email
@@ -1461,6 +1479,9 @@ urlpatterns = [
      using our site! {% endautoescape %}
      ```
   6. create a new file in **accounts/templates/password_reset_confirm_form.html**
+     <details>
+      <summary>Click to expand</summary>
+
      ```html
      {% extends "tasks/base.html" %} {% block content %}
      <div class="container mt-5">
@@ -1500,7 +1521,12 @@ urlpatterns = [
      </div>
      {% endblock %}
      ```
+
+     </details>
   7. Create a new file in **templates/accounts/password_reset_complete.html**
+     <details>
+      <summary>Click to expand</summary>
+
      ```html
      {% extends "base.html" %} {% load static %} {% block content %}
      <div class="container mt-5">
@@ -1526,6 +1552,8 @@ urlpatterns = [
      </div>
      {% endblock %}
      ```
+
+     </details>
 
 - ### User Authorization: Permissions and GroupsProtecting Views with Login Required Decorators
 - ### Multi-tenant authentication with Custom Django’s User Model

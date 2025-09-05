@@ -38,6 +38,9 @@ class Task(models.Model):
                 name="status_check",
             ),
         ]
+        permissions = [
+            ('custom_task', "Custom Task Permission"),
+        ]
 
 
 class Epic(models.Model):

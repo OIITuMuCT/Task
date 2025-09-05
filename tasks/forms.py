@@ -1,6 +1,7 @@
 import uuid
 from django import forms
 from django.forms import modelformset_factory
+# from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError,transaction
 from .models import FormSubmission, SubscribedEmail, Task
@@ -24,10 +25,10 @@ class TaskForm(forms.ModelForm):
 
     def clean_uuid(self):
         uuid_value = str(self.cleaned_data.get("uuid"))
-        was_set = cache.set(uuid_value, "submitted", nx=True)
-        if not was_set:
-            # If 'was_set' is False, the UUID already exists in the cache.
-            raise ValidationError("This form has already been submitted.")
+        # was_set = cache.set(uuid_value, "submitted", nx=True)
+        # if not was_set:
+        #     # If 'was_set' is False, the UUID already exists in the cache.
+        #     raise ValidationError("This form has already been submitted.")
         with transaction.atomic():
             # Try to record the form submission by UUID
             try:

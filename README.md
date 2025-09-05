@@ -1556,5 +1556,46 @@ urlpatterns = [
      </details>
 
 - ### User Authorization: Permissions and GroupsProtecting Views with Login Required Decorators
+  1. Add a **@login_required** decorator to our create task on sprint view
+
+     ```python
+       from django.contrib.auth.decorators import login_required
+
+       @login_required  # Add decorator
+       def create_task_on_sprint(request: HttpRequest, sprint_id: int) -> HttpResponseRedirect:
+           if request.method == "POST":
+           task_data: Dict[str, str] = {
+              'title': request.POST.get("title", "Untitled"),
+              'description': request.POST.get("description", ""),
+              'status': request.POST.get("status", "UNASSIGNED"),
+           }
+           task = create_task_and_add_to_sprint(task_data, sprint_id, request.user)
+          return redirect("task-detail", task_id=task.id)
+      ```
+
+  2. The simplest way to authenticate the views is to inherit from the **LoginRequiredMixin**:
+
+     ```python
+     from django.contrib.auth.mixins import LoginRequiredMixin
+     from django.views.generic import ListView
+
+     class TaskListView(LoginRequiredMixin, ListView):
+         model = Task
+         template_name = 'task_list.html'
+         context_object_name = 'tasks'
+     ```
+  3. There is an alternative way using the **login_required** decorator:
+
+     ```python
+         from django.utils.decorators import method_decorator
+         from django.contrib.auth.decorators import login_required
+         from django.views.generic import ListView
+
+         @method_decorator(login_required, name='dispatch')
+         class TaskListView(ListView):
+             model = Task
+             template_name = 'task_list.html'
+             context_object_name = 'tasks'
+     ```
 - ### Multi-tenant authentication with Custom Django’s User Model
 - ### Security Best Practices in Django

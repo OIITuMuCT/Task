@@ -11,5 +11,17 @@
 <div class="d-flex">
     <input type="text" class="form-control" id="search" placeholder="Search">
     <button class="btn btn-success ml-2">Search</button>
+    <!-- Login/Logout links -->
+    {% if user.is_authenticated %}
+    <form action="{% url 'accounts:logout' %}" method="post">
+        {% csrf_token %}
+        <button class="btn btn-danger ml-2" >Logout({{ user.username }})</button>
+    </form> 
+    {% else %}
+    <form action="{% url 'accounts:login' %}" method="post">
+        {% csrf_token %}
+        <button class="btn btn-info ml-2" type="submit">Login(Anonymous)</button>
+    </form>
+    {% endif %}
 </div>
 </header>

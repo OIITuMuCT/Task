@@ -51,6 +51,21 @@ def create_task_and_add_to_sprint(task_data: dict[str, str], sprint_id: int, cre
     return task
 
 
+@transaction.atomic
+def claim_task(user_id, task_id):
+    # Lock the task row to prevent other transactions from claiming it simultaneously
+    task = Task.objects.select_for_update().get(id=task_id)
+
+    # Check if the task is already claimed
+    if task.owner_id:
+        raise TaskAlreadyClaimedException("Task is already claimed or completed.")
+
+    # Claim the task
+    task.status = "IN_PROGRESS"
+    task.owner_id = user_id
+    task.save()
+
+
 def send_contact_email(
         subject: str, message: str, from_email: str, to_email: str
     ) -> None:

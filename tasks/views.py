@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import date
+from django.forms import BaseModelForm
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -7,7 +8,9 @@ from django.http import (
     Http404,
     JsonResponse,
 )
-from django.shortcuts import render, redirect
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy, reverse
 from django.views.generic import DetailView, ListView, FormView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
@@ -20,13 +23,15 @@ from . import services
 from .services import create_task_and_add_to_sprint
 from .forms import TaskForm, ContactForm, EpicFormSet
 
-
-class TaskListView(ListView):
+# Added LoginRequiredMixin for authenticate user
+class TaskListView(PermissionRequiredMixin, ListView):
     """A view that display a list of objects from a Task model"""
 
     model = Task
     template_name = "task_list.html"
     context_object_name = "tasks"
+    login_url = '/login/'
+    raise_exception = True
 
 
 class TaskDetailView(DetailView):
@@ -37,21 +42,26 @@ class TaskDetailView(DetailView):
     context_object_name = "task"
 
 
-class TaskCreateView(CreateView):
+class TaskCreateView(LoginRequiredMixin, CreateView):
     """A view that shows a form for creating a new object, which is saved to a model"""
 
     model = Task
     template_name = "tasks/task_form.html"
-    # fields = ("title", "description")
+    fields = ("title", "description")
     form_class = TaskForm
 
     def get_success_url(self):
         return reverse_lazy("task-detail", kwargs={"pk": self.object.id})
 
+    def form_valid(self, form):
+        # Set the creator to the currently logged in user
+        form.instance.creator = self.request.user
+        return super().form_valid(form)
 
-class TaskUpdateView(SprintTaskMixin, UpdateView):
+
+class TaskUpdateView(PermissionRequiredMixin, SprintTaskMixin, UpdateView):
     """A view that shows a form for updating an existing object, which is saved to a model"""
-
+    permission_required = ("tasks.change_task",)
     model = Task
     template_name = "tasks/task_form.html"
     fields = ("title", "description")
@@ -59,6 +69,21 @@ class TaskUpdateView(SprintTaskMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy("tasks:task-detail", kwargs={"pk": self.object.id})
 
+    def has_permission(self):
+        # First, check if the user has the general permission to edit tasks
+        has_general_permission = super().has_permission()
+        
+        # Then check if the user is either the
+        # creator or teh owner of this task
+        task_id = self.kwargs.get("pk")
+        task = get_object_or_404(Task, id=task_id)
+        
+        is_creator_or_owner = (
+            task.creator == self.request.user or task.owner == self.request.user
+        )
+        
+        # Return True only if both conditions are met
+        return has_general_permission and is_creator_or_owner
 
 class TaskDeleteView(DeleteView):
     """A view that shows a confirmation page and deletes an existing object."""
@@ -116,6 +141,8 @@ def contact_form_view(request):
     return render(request, 'tasks/example_form.html', {'form': form})
     # return render(request, "tasks/example.html", {"form": form})
 
+
+@permission_required("tasks.add_task")
 def create_task_on_sprint(request: HttpRequest, sprint_id: int) -> HttpResponseRedirect:
     if request.method == "POST":
         task_data: dict[str, str] = {
@@ -129,7 +156,7 @@ def create_task_on_sprint(request: HttpRequest, sprint_id: int) -> HttpResponseR
         return redirect("tasks:task-detail", task_id=task.id)
     raise Http404("Not found")
 
-
+@login_required
 def claim_task_view(request, task_id):
     user_id = (
         request.user.id
@@ -168,6 +195,7 @@ class ContactFormView(FormView):
 
         return super().form_valid(form)
 
+@login_required
 def manage_epic_tasks(request, epic_pk):
     epic = services.get_epic_by_id(epic_pk)
     if not epic:

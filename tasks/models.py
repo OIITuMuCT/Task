@@ -1,5 +1,6 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser, BaseUserManager
 from django.db import models
+from django.conf import settings
 
 
 class Task(models.Model):
@@ -20,12 +21,18 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     creator = models.ForeignKey(
-        User, related_name="created_tasks", on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL,
+        related_name="created_tasks",
+        on_delete=models.CASCADE,
+        null=False,
     )
     owner = models.ForeignKey(
-        User, related_name="owned_tasks", on_delete=models.SET_NULL, null=True
+        settings.AUTH_USER_MODEL,
+        related_name="owned_tasks",
+        on_delete=models.SET_NULL,
+        null=True,
     )
-    file_upload = models.FileField(upload_to="tasks/files", null=True, blank=True)
+    file_upload = models.FileField(upload_to="tasks/files/", null=True, blank=True)
     image_upload = models.ImageField(upload_to="tasks/images/", null=True, blank=True)
 
     class Meta:
@@ -39,7 +46,7 @@ class Task(models.Model):
             ),
         ]
         permissions = [
-            ('custom_task', "Custom Task Permission"),
+            ("custom_task", "Custom Task Permission"),
         ]
 
 
@@ -49,7 +56,7 @@ class Epic(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     creator = models.ForeignKey(
-        User, related_name="created_epics", on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL, related_name="created_epics", on_delete=models.CASCADE
     )
     tasks = models.ManyToManyField("Task", related_name="epics", blank=True)
     # This field might be used to denote the progress of the epic
@@ -64,7 +71,9 @@ class Sprint(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     creator = models.ForeignKey(
-        User, related_name="created_sprints", on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL,
+        related_name="created_sprints",
+        on_delete=models.CASCADE,
     )
     tasks = models.ManyToManyField("Task", related_name="sprints", blank=True)
     # The epic to which this sprint is contributing
@@ -80,9 +89,11 @@ class Sprint(models.Model):
             ),
         ]
 
+
 class SubscribedEmail(models.Model):
     email = models.EmailField()
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="watchers")
+
 
 class FormSubmission(models.Model):
     uuid = models.UUIDField(unique=True)

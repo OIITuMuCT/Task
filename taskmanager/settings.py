@@ -159,5 +159,8 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 #         },
 #     }
 # }
+
+AUTH_USER_MODEL = 'accounts.TaskManagerUser'
+
 LOGIN_REDIRECT_ULR = "tasks:task-home"
 LOGOUT_REDIRECT_ULR = "accounts:login"

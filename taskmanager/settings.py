@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
+from tasks.api.pagination import TaskManagerPagination
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -168,3 +169,5 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 LOGIN_REDIRECT_ULR = "tasks:task-home"
 LOGOUT_REDIRECT_ULR = "accounts:login"
+
+NINJA_PAGINATION_CLASS = TaskManagerPagination

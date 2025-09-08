@@ -11,10 +11,12 @@ from django.contrib.auth.views import (
 )
 from . import views
 from tasks.views import TaskListView
+# from . import views
 
 app_name = "accounts"
 
 urlpatterns = [
+    # path("login/", views.CustomLoginView.as_view(), name="login"),
     path("register/", views.register, name="register"),
     path("profile/", TaskListView.as_view(), name="profile"),
     path(

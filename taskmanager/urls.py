@@ -22,7 +22,7 @@ from taskmanager.api import api
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/v1", api.urls),
+    path("api/v1/", api.urls),
     path("accounts/", include("accounts.urls")),
     path(
         "", include("tasks.urls", namespace="tasks")

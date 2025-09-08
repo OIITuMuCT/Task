@@ -21,7 +21,7 @@ class TaskForm(forms.ModelForm):
         # Check if an instance is provided and populate watchers field
         if self.instance and self.instance.pk:
             self.fields['watchers'].initial = ', '.join(email.email for email in self.instance.watchers.all())
-            self.fields['uuid'].initial = uuid.uuid4()
+        self.fields['uuid'].initial = uuid.uuid4()
 
     def clean_uuid(self):
         uuid_value = str(self.cleaned_data.get("uuid"))

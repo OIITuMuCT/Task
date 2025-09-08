@@ -1,6 +1,5 @@
 from collections import defaultdict
 from datetime import date
-from django.forms import BaseModelForm
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -15,18 +14,16 @@ from django.urls import reverse_lazy, reverse
 from django.views.generic import DetailView, ListView, FormView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.template import loader
-from datetime import date
 
 from .models import Task
 from .mixins import SprintTaskMixin
 from . import services
-from .services import create_task_and_add_to_sprint
 from .forms import TaskForm, ContactForm, EpicFormSet
 
 # Added LoginRequiredMixin for authenticate user
 class TaskListView(PermissionRequiredMixin, ListView):
     """A view that display a list of objects from a Task model"""
-
+    permission_required = ("task.view_task", "tasks.custom_task")
     model = Task
     template_name = "task_list.html"
     context_object_name = "tasks"
@@ -36,7 +33,7 @@ class TaskListView(PermissionRequiredMixin, ListView):
 
 class TaskDetailView(DetailView):
     """A view shows a single object adn its details"""
-
+    # permission_required = 'tasks.view_task'
     model = Task
     template_name = "tasks/task_detail.html"
     context_object_name = "task"
@@ -44,14 +41,14 @@ class TaskDetailView(DetailView):
 
 class TaskCreateView(LoginRequiredMixin, CreateView):
     """A view that shows a form for creating a new object, which is saved to a model"""
-
+    permission_required = ("task_add")
     model = Task
     template_name = "tasks/task_form.html"
-    fields = ("title", "description")
+    # fields = ("title", "description")
     form_class = TaskForm
 
     def get_success_url(self):
-        return reverse_lazy("task-detail", kwargs={"pk": self.object.id})
+        return reverse_lazy("tasks:task-detail", kwargs={"pk": self.object.id})
 
     def form_valid(self, form):
         # Set the creator to the currently logged in user
@@ -93,12 +90,7 @@ class TaskDeleteView(DeleteView):
     success_url = reverse_lazy("tasks:task-list")
 
 
-def task_by_date(request: HttpRequest, by_date: date) -> HttpResponse:
-    tasks = services.get_task_by_date(by_date)
-    context = {"tasks": tasks}
-    return render(request, "tasks/task_list.html", context)
-
-
+# @login_required
 def task_home(request):
     # Fetch all tasks at once
     tasks = Task.objects.filter(
@@ -118,6 +110,12 @@ def task_home(request):
             context["archived_tasks"].append(task)
     # return redirect(reverse("tasks:task-list"))
     return render(request, "tasks/home.html", context)
+
+
+def task_by_date(request: HttpRequest, by_date: date) -> HttpResponse:
+    tasks = services.get_task_by_date(by_date)
+    context = {"tasks": tasks}
+    return render(request, "tasks/task_list.html", context)
 
 
 def example_view(request):

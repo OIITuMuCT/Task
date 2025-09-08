@@ -77,6 +77,22 @@
   - [Multi-tenant authentication with Custom Django’s User Model](#multi-tenant-authentication-with-custom-djangos-user-model)
   - [Security Best Practices in Django](#security-best-practices-in-django)
 
+- [9. Django Ninja and APIs](#9-django-ninja-and-apis)
+  - [Introduction to API design](#introduction-to-api-design)
+  - [API Design-first approach](#api-design-first-approach)
+  - [HTTP Response status codesIntroduction to Django Ninja](#http-response-status-codesintroduction-to-django-ninja)
+  - [Setting Up Django Ninja in Your Project](#setting-up-django-ninja-in-your-project)
+  - [Building Your First API with Django Ninja](#building-your-first-api-with-django-ninja)
+  - [Request and Response Models with Pydantic](#request-and-response-models-with-pydantic)
+  - [API Documentation](#api-design-first-approach)
+  - [Understanding HTTP Methods in Django Ninja](#understanding-http-methods-in-django-ninja)
+  - [API Pagination](#api-pagination)
+  - [Working with Path Parameters and Query Parameters](#working-with-path-parameters-and-query-parameters)
+  - [Validation and Error Handling in Django Ninja](#validation-and-error-handling-in-django-ninja)
+  - [Authenticating API Users](#authenticating-api-users)
+  - [Securing APIs: Permissions and Throttling](#securing-apis-permissions-and-throttling)
+  - [Versioning Your API](#versioning-your-api)
+
 ## 1. Creating a **_Task_** model
 
   <details>  
@@ -1599,3 +1615,20 @@ urlpatterns = [
      ```
 - ### Multi-tenant authentication with Custom Django’s User Model
 - ### Security Best Practices in Django
+
+## 9. Django Ninja and APIs
+
+- ### Introduction to API design
+- ### API Design-first approach
+- ### HTTP Response status codesIntroduction to Django Ninja
+- ### Setting Up Django Ninja in Your Project
+- ### Building Your First API with Django Ninja
+- ### Request and Response Models with Pydantic
+- ### API Documentation
+- ### Understanding HTTP Methods in Django Ninja
+- ### API Pagination
+- ### Working with Path Parameters and Query Parameters
+- ### Validation and Error Handling in Django Ninja
+- ### Authenticating API Users
+- ### Securing APIs: Permissions and Throttling
+- ### Versioning Your API

@@ -1302,7 +1302,7 @@ urlpatterns = [
   1. Open the **accounts/urls.py** and add the new paths:
      <details>
      <summary>Click to expand</summary>
-     
+
      ```python
        from django.urls import path, reverse_lazy
        from django.contrib.auth.views import (
@@ -1366,7 +1366,9 @@ urlpatterns = [
            ),
        ]
      ```
+
      </details>
+
   2. Add in **templates/accounts/password_change.html**
      <details>
       <summary>Click to expand</summary>
@@ -1539,6 +1541,7 @@ urlpatterns = [
      ```
 
      </details>
+
   7. Create a new file in **templates/accounts/password_reset_complete.html**
      <details>
       <summary>Click to expand</summary>
@@ -1572,6 +1575,7 @@ urlpatterns = [
      </details>
 
 - ### User Authorization: Permissions and GroupsProtecting Views with Login Required Decorators
+
   1. Add a **@login_required** decorator to our create task on sprint view
 
      ```python
@@ -1587,7 +1591,7 @@ urlpatterns = [
            }
            task = create_task_and_add_to_sprint(task_data, sprint_id, request.user)
           return redirect("task-detail", task_id=task.id)
-      ```
+     ```
 
   2. The simplest way to authenticate the views is to inherit from the **LoginRequiredMixin**:
 
@@ -1600,6 +1604,7 @@ urlpatterns = [
          template_name = 'task_list.html'
          context_object_name = 'tasks'
      ```
+
   3. There is an alternative way using the **login_required** decorator:
 
      ```python
@@ -1613,6 +1618,7 @@ urlpatterns = [
              template_name = 'task_list.html'
              context_object_name = 'tasks'
      ```
+
 - ### Multi-tenant authentication with Custom Django’s User Model
 - ### Security Best Practices in Django
 
@@ -1626,9 +1632,215 @@ urlpatterns = [
 - ### Request and Response Models with Pydantic
 - ### API Documentation
 - ### Understanding HTTP Methods in Django Ninja
+
+  Open the file and add the new endpoint **tasks/api/tasks.py**
+
+  ```python
+      from http import HTTPStatus
+      from django.http import HttpRequest, HttpResponse
+
+      from ninja import Router
+
+      router = Router()
+
+      # Create
+      @router.post("/", response={201: CreateSchemaOut})
+      def create_task(request: HttpResponse, task_in: TaskSchemaIn):
+        creator = request.user
+        return service.create_task(creator, **task_in.dict())
+
+      # Read(list)
+      @router.get("/", response=list[TaskSchemaOut])
+      def list_task(request):
+          return service.list_tasks()
+
+      # Read(object)
+      @router.get("/{int:task_id}", response=TaskSchemaOut)
+      def get_task(request: HttpRequest, task_id: int):
+        task = service.get_task(task_id)
+        if task is None:
+            raise Http404("Task not found.")
+        return task
+
+      # Update
+      @router.put("/{int:task_id}")
+      def update_task(request: HttpResponse, task_id: int, task_data:TaskSchemaIn):
+        service.update_task(task_id=task_id, task_data=task_data.dict())
+        return HttpResponse(status=HTTPStatus.NO_CONTENT)
+
+      # Delete
+      @router.delete("/{int:task_id}")
+      def delete_task(request: HttpRequest, task_id: int):
+        service.delete_task(task_id=task_id)
+        return HttpResponse(status=HTTPStatus.NO_CONTENT)
+  ```
+
 - ### API Pagination
+
+  ```python
+    from ninja import Schema
+
+    class TaskManagerPagination(PaginationBase):
+    # only `skip` param, defaults to 5 per page
+    class Input(Schema):
+        skip_records: int
+    class Output(Schema):
+        items: list[Any]
+        count: int
+        page_size: int
+    def paginate_queryset(self, queryset, pagination: Input, **params):
+        skip_records = pagination.skip_records
+        return {
+            "data": queryset[skip_records: skip_records + 5],
+            "count": queryset.count(),
+            "page_size": 5,
+        }
+  ```
+
+  Adding in **taskmanager/settings.py**
+
+  ```shell
+    NINJA_PAGINATION_CLASS=TaskManagerPagination
+  ```
+
 - ### Working with Path Parameters and Query Parameters
 - ### Validation and Error Handling in Django Ninja
 - ### Authenticating API Users
+
+  Token-Based Authentication
+
+  ```python
+    # accounts/models.py
+    import uuid
+    from django.db import models
+
+    class ApiToken(models.Model):
+        token = models.UUIDField(default=uuid.uuid4, unique=True)
+        user = models.ForeignKey(TaskManagerUser, on_delete=models.CASCADE)
+
+        def __str__(self):
+          return str(self.token)
+  ```
+
+  Creating a new file **tasks/api/security.py**
+
+  ```python
+    from account.api.security import ApiTokenAuth
+
+    @router.get("/", response=list[TaskSchemaOut], auth=ApiTokenAuth())
+    @paginate
+    def list_tasks(request):
+      return service.list_tasks()
+  ```
+
+  Open the file **taskmanager/api.py** and modify it to integrate the new authentication method
+
+  ```python
+    from accounts.api.security import ApiTokenAuth
+    api_v1 = NinjaAPI(version="v1", auth= ApiTokenAuth ())
+
+    #If we don’t want to affect the project globally, we can add
+    # authentication at the router level:
+
+    from accounts.api.security import ApiTokenAuth
+    router = Router(auth= ApiTokenAuth ())
+  ```
+
+  Create a new file for the service layer **accounts/service.py** and populate it with the following contents:
+
+  ```python
+      # accounts/service.py
+      from accounts.models import ApiToken
+      def generate_token(user: AbstractUser) -> str:
+          token, _ = ApiToken.objects.get_or_create(user=user)
+          return str(token.token)
+  ```
+
+  Let's now create a view to display the token to the user:
+
+  ```python
+    from django.contrib.auth.decorator import login_required
+    from django.shortcuts import redirect, render
+    from accounts.service import generate_token
+
+    @login_required
+    def token_generation_view(request):
+        token = generate_token(request.user)
+        return render(request, "accounts/token_display.html", {"token": token})
+  ```
+
+  Then we need to add the new view to the **accounts/urls.py**:
+
+  ```python
+    urlpatterns = [
+        # ...
+        path("show-api-token/", views.token_generation_view, name="api-token"),
+    ]
+  ```
+
+  We still need to create the new template to display the token in the **templates/accounts/token_display.html:**
+
+  ```html
+  {% extends 'tasks/base.html' %} {% load static %} {% block content %}
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta
+        name="viewport"
+        content="width=device-width, initial-
+          scale=1.0"
+      />
+      <title>API Token</title>
+    </head>
+    <body class="bg-light">
+      <div class="container py-5">
+        <div class="row justify-content-center">
+          <div class="col-md-8">
+            <div class="card">
+              <div class="card-header">
+                <h1 class="card-title">Your API Token</h1>
+              </div>
+              <div class="card-body">
+                {% if token %}
+                <p class="card-text">Your token: <code>{{ token }} </code></p>
+                {% else %}
+                <p class="card-text">No token available.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>
+  {% endblock %}
+  ```
+
+  ```shell
+    ❯ curl http://localhost:8000/api/v1/tasks/archive/2025/09/08
+    {"detail": "Unauthorized"}
+
+    ❯ curl -H "Authorization: Bearer 74d98426-d7b9-43d6-91d2-2e21c46a1db9" \
+      http://localhost:8000/api/v1/tasks/archive/2025/09/08
+
+    {"items": [
+          {
+            "title": "New Task with uuid field",
+            "description": "dsdfsfs"
+          },
+          {
+            "title": "New Task from udid",
+            "description": "Good a Create new tasks uuid"
+          },
+          {
+            "title": "Enhanced Satellite Data Analisis",
+            "description": "Develop a comprehensive analytical model to process"
+          }
+      ], "count": 3}
+  ```
+
+JSON Web Tokens Authentication
+
 - ### Securing APIs: Permissions and Throttling
 - ### Versioning Your API

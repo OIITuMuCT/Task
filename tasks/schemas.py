@@ -38,8 +38,8 @@ class PathDate(Schema):
     month: int = Field(..., ge=1, le=12)    # Month must be between 1 and 12.
     day: int = Field(..., ge=1, le=31)      # Day must be between 1 and 31.
 
-    @model_validator(mode='after')
-    def validate_date(self) -> PathDate:
+    @model_validator(mode="after")
+    def validate_date(self) -> "PathDate":
         try:
             return datetime.date(self.year, self.month, self.day)
         except ValueError:

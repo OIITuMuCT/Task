@@ -10,10 +10,11 @@ from tasks.schemas import (
     PathDate,
     TaskFilterSchema,
 )
+from accounts.api.security import ApiTokenAuth
 from tasks.enums import TaskStatus
 from tasks import services
 
-router = Router(tags=["tasks"])
+router = Router(auth=ApiTokenAuth(), tags=["tasks"])
 
 
 @router.post("/", response={201: CreateSchemaOut})
@@ -22,11 +23,12 @@ def create_task(request: HttpRequest, task_in: TaskSchemaIn):
     return services.create_task(creator, **task_in.dict())
 
 
-@router.get("/", response=list[TaskSchemaOut])
+@router.get("/", response=list[TaskSchemaOut], auth=ApiTokenAuth())
 @paginate
-def list_tasks(request: HttpRequest, filters: TaskFilterSchema = Query(...)):
-    return services.list_tasks(**filters.dict())
-
+# def list_tasks(request: HttpRequest, filters: TaskFilterSchema = Query(...)):
+#     return services.list_tasks(**filters.dict())
+def list_tasks(request: HttpRequest):
+    return services.list_tasks()
 
 @router.get("/{int:task_id}", response=TaskSchemaOut)
 def get_task(request: HttpRequest, task_id: int):
@@ -58,4 +60,3 @@ def archived_tasks(request, created_at: PathDate = Path(...)):
 @router.get("/error")
 def generate_error(request):
     raise HttpError(status_code=400, detail="Custom error message")
-

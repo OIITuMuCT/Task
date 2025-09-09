@@ -18,11 +18,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from taskmanager.api import api
+from taskmanager.api import api_v1
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/v1/", api.urls),
+    path("api/v1/", api_v1.urls),
     path("accounts/", include("accounts.urls")),
     path(
         "", include("tasks.urls", namespace="tasks")

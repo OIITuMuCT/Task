@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager, User, PermissionsMixin
@@ -11,6 +12,13 @@ class UserProfile(models.Model):
 
 class Organization(models.Model):
     name = models.CharField(max_length=255)
+
+class ApiToken(models.Model):
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.token)
 
 
 # class CustomUserManager(BaseUserManager):

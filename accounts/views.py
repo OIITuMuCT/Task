@@ -1,8 +1,13 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView
+from accounts.services import generate_token
+
+
 from .forms import CustomAuthenticationForm
-from django.contrib import messages
+
 
 def register(request):
     """ Register user """
@@ -20,3 +25,9 @@ def register(request):
 
 class CustomLoginView(LoginView):
     authentication_form = CustomAuthenticationForm
+
+@login_required
+def token_generation_view(request):
+    """Generates a token and displays it"""
+    token = generate_token(request.user)
+    return render(request, 'accounts/token_display.html', {"token": token})

@@ -7,9 +7,12 @@ from django.db.models.functions import TruncDate
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from .models import Epic, Sprint, Task
+from tasks.enums import TaskStatus
+
 
 class TaskAlreadyClaimedException(Exception):
     pass
+
 
 def create_task(creator: User, **task_data: Any) -> Task:
     task = Task(**task_data)
@@ -37,19 +40,32 @@ def delete_task(task_id: int) -> None:
         return
     task.delete()
 
+
 def get_task(task_id: int) -> Task | None:
-    return(
+    return (
         Task.objects.select_related("owner")
         .select_related("creator")
         .filter(pk=task_id)
         .first()
     )
 
+
 def list_tasks():
     return Task.objects.all()
 
+
+def search_tasks(
+    created_at: date,
+    status: TaskStatus,
+) -> list[Task]:
+    tasks = Task.objects.filter(created_at__date=created_at, status=status).order_by(
+        "status", "created_at"
+    )
+    return tasks
+
+
 def can_add_task_to_sprint(task, sprint_id):
-    """ 
+    """
     Checks if a task can be added to a sprint based on the
     sprint's date range.
     """
@@ -63,9 +79,11 @@ def get_task_by_date(by_date: date) -> list[Task]:
     )
 
 
-def create_task_and_add_to_sprint(task_data: dict[str, str], sprint_id: int, creator: User) -> Task:
+def create_task_and_add_to_sprint(
+    task_data: dict[str, str], sprint_id: int, creator: User
+) -> Task:
     """
-    Create a new task and associate it with a sprint. 
+    Create a new task and associate it with a sprint.
     """
     # Fetch the sprint by its ID
     sprint = Sprint.objects.get(id=sprint_id)
@@ -74,14 +92,16 @@ def create_task_and_add_to_sprint(task_data: dict[str, str], sprint_id: int, cre
     now = datetime.now()
     # Check if the current date and time is within the sprint's start and end dates
     if not (sprint.start_date <= now <= sprint.end_date):
-        raise ValidationError("Cannot add task to sprint: Current date is not within the sprint's start and end dates.")
+        raise ValidationError(
+            "Cannot add task to sprint: Current date is not within the sprint's start and end dates."
+        )
     with transaction.atomic():
         # Create the task
         task = Task.objects.create(
             title=task_data["title"],
             description=task_data.get("description", ""),
-            status=task_data.get('status', "UNASSIGNED"),
-            creator=creator
+            status=task_data.get("status", "UNASSIGNED"),
+            creator=creator,
         )
         # Add the task to the sprint
         sprint.tasks.add(task)
@@ -104,9 +124,10 @@ def claim_task(user_id, task_id):
 
 
 def send_contact_email(
-        subject: str, message: str, from_email: str, to_email: str
-    ) -> None:
+    subject: str, message: str, from_email: str, to_email: str
+) -> None:
     send_mail(subject, message, from_email, [to_email])
+
 
 def get_epic_by_id(epic_id: int) -> Epic | None:
     return Epic.objects.filter(pk=epic_id).first()

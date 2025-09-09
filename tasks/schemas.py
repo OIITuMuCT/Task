@@ -1,4 +1,6 @@
+import datetime
 from ninja import Schema, ModelSchema, Field
+
 # from django.contrib.auth.models import User
 
 from .models import Task
@@ -21,3 +23,12 @@ class TaskSchemaOut(ModelSchema):
 
 class CreateSchemaOut(Schema):
     id: int = Field(..., example=1)
+
+class PathDate(Schema):
+    year: int
+    month: int
+    day: int
+
+    def value(self):
+        return datetime.date(self.year, self.month, self.day)
+

@@ -1,14 +1,11 @@
 from django.contrib.auth.models import User, AbstractUser, BaseUserManager
 from django.db import models
 from django.conf import settings
-
+from tasks.enums import TaskStatus
 
 class Task(models.Model):
     STATUS_CHOICES = [
-        ("UNASSIGNED", "Unassigned"),
-        ("IN_PROGRESS", "In Progress"),
-        ("DONE", "Completed"),
-        ("ARCHIVED", "Archived"),
+        (status.value, status.name.replace("_", '').title()) for status in TaskStatus
     ]
 
     title = models.CharField(max_length=200)
@@ -16,7 +13,7 @@ class Task(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default="UNASSIGNED",
+        default=TaskStatus.UNASSIGNED.value,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

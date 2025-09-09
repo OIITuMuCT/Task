@@ -1,10 +1,10 @@
-from ninja import Router
+from ninja import Router, Path
 from ninja.pagination import paginate
 from django.http import Http404
 from http import HTTPStatus
-from tasks.schemas import CreateSchemaOut, TaskSchemaIn, TaskSchemaOut
 from django.http import HttpRequest, HttpResponse
 
+from tasks.schemas import CreateSchemaOut, TaskSchemaIn, TaskSchemaOut, PathDate
 from tasks import services
 
 router = Router(tags=["tasks"])
@@ -40,3 +40,9 @@ def update_task(request: HttpRequest, task_id: int, task_data: TaskSchemaIn):
 def delete_task(request: HttpRequest, task_id: int):
     services.delete_task(task_id=task_id)
     return HttpResponse(status=HTTPStatus.NO_CONTENT)
+
+@router.get('/archive/{year}/{month}/{day}', response=list[TaskSchemaOut])
+@paginate
+def archive_tasks(request, created_at: PathDate = Path(...)):
+    return services.search_tasks(created_at=created_at.value(),
+        status=TaskStatus.ARCHIVED.value)

@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView
-from accounts.services import generate_token
+from accounts.services import generate_token, issue_jwt_token, issue_jwt_refresh_token
 
 
 from .forms import CustomAuthenticationForm
@@ -30,4 +30,13 @@ class CustomLoginView(LoginView):
 def token_generation_view(request):
     """Generates a token and displays it"""
     token = generate_token(request.user)
-    return render(request, 'accounts/token_display.html', {"token": token})
+    jwt_token = issue_jwt_token(request.user)
+    refresh_token = issue_jwt_refresh_token(request.user)
+    return render(
+        request, 'accounts/token_display.html',
+        {
+            "token": token, 
+            "jwt_token": jwt_token, 
+            "refresh_token": refresh_token
+        }
+    )

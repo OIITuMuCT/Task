@@ -1,7 +1,9 @@
+import jwt
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
 from django.conf import settings
 from accounts.models import ApiToken
-
+from datetime import datetime, timedelta, timezone
 
 def generate_token(user: AbstractUser) -> str:
     """
@@ -18,3 +20,62 @@ def generate_token(user: AbstractUser) -> str:
     """
     token, _ = ApiToken.objects.get_or_create(user=user)
     return str(token.token)
+
+def issue_jwt_token(user: AbstractUser) -> str:
+    payload = {
+        "id": user.id,
+        "exp": datetime.now(timezone.utc) + timedelta(days=1) # The token will expire in 1 day 
+    }
+    token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm="HS256")
+    return token
+
+def issue_jwt_refresh_token(user: AbstractUser) -> str:
+    """
+        Generate a JWT refresh token for the specified user.
+
+    This function creates a JWT (JSON Web Token) refresh token for the given user.
+    The payload of the token includes the user's ID and an expiration time set to 30 days
+    from the current time. The token is encoded using the HS256 algorithm with a
+    separate secret key designated for refresh tokens.
+
+    Parameters:
+    user (AbstractUser): The Django user instance for whom the refresh token is being issued.
+
+    Returns:
+    str: A JWT refresh token as a string.
+    """
+    refresh_token_payload = {
+        "id": user.id,
+        "exp": datetime.now(timezone.utc) + timedelta(days=30),
+    }
+    refresh_token = jwt.encode(refresh_token_payload, settings.JWT_REFRESH_SECRET_KEY, algorithm="HS256")
+
+    return refresh_token
+
+
+def issue_jwt_token_from_refresh(user: AbstractUser, refresh_token: str) -> str:
+    """
+    Generate a new JWT access token using a valid refresh token.
+
+    This function decodes the provided JWT refresh token using a specific secret key
+    for refresh tokens. It then validates the user ID encoded in the refresh token
+    and issues a new access token with a short expiration period (typically 30 minutes).
+
+    Parameters:
+    user (AbstractUser): The Django user instance for whom the access token is being issued.
+    refresh_token (str): The JWT refresh token used to validate and issue a new access token.
+
+    Returns:
+    str: A newly generated JWT access token as a string.
+    """
+    payload = jwt.decode(
+        refresh_token, settings.JWT_REFRESH_SECRET_KEY, algorithms=["HS256"]
+    )
+    user = get_user_model().objects.get(id=payload["id"])
+
+    # Issue new access token
+    access_token_payload = {
+        "id": user.id,
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
+    }
+    return jwt.encode(access_token_payload, settings.JWT_SECRET_KEY, algorithm="HS256")

@@ -78,6 +78,7 @@
   - [Security Best Practices in Django](#security-best-practices-in-django)
 
 - [9. Django Ninja and APIs](#9-django-ninja-and-apis)
+
   - [Introduction to API design](#introduction-to-api-design)
   - [API Design-first approach](#api-design-first-approach)
   - [HTTP Response status codesIntroduction to Django Ninja](#http-response-status-codesintroduction-to-django-ninja)
@@ -1858,6 +1859,7 @@ urlpatterns = [
   **JSON Web Tokens Authentication**
 
   Then, in our **tasks/api/security.py** file, we will add a new class to create the JWT Authentication:
+
   ```python
     # tasks/api/security.py
     import jwt
@@ -1878,7 +1880,9 @@ urlpatterns = [
       except Exception as e:
         return None
   ```
+
   Now we need a function to issue the JWT token given to a user. Open the **accounts/service.py** and add the new function to issue a JWT token:
+
   ```python
     # accounts/api/security
     import jwt
@@ -1894,18 +1898,23 @@ urlpatterns = [
         token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm="HS256")
         return token
   ```
+
   You must add the new JWT_SECRET_KEY settings in the **taskmanager/settings.py** and get it from the environment variables:
+
   ```python
     # taskmanager/settings.py
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY, "jwt_secret")
   ```
+
   ```python
     # taskmanager/api.py
     api_v1 = NinjaAPI(version="v1", auth=[ApiKeyAuth(), JWTAuth()])
   ```
+
   And now let’s update our token view to include the JWT token:
+
   ```python
-    # accounts/views.py 
+    # accounts/views.py
     @login_required
     def token_generation_view(request):
         token = generate_token(request.user)
@@ -1922,7 +1931,69 @@ urlpatterns = [
 ## 10. Testing with pytest
 
 - ### Introduction to testing and pytest
+
+  > Testing is a crucial component of software development that \
+  > ensures your code behaves as expected and helps maintain its \
+  > quality over time. pytest is a robust, feature-rich testing \
+  > framework for Python that enables developers to write simple \
+  > and scalable test codes.
+
+  > Testing involves executing software to verify its results \
+  > to find errors, bugs, or other issues. The primary goal of \
+  > testing is to ensure the application’s quality, reliability, \
+  > and proper performance.
+  >
+  > - Unit testing
+  > - Integration testing
+  > - End-to-end tests
+
 - ### Installing and setting up pytest for Django
+
+  ```shell
+    poetry add --dev pytest pytest-django
+  ```
+
+  > Create a new file **pytest.ini**, at the root of your project with the
+  > following contents:
+
+  ```python
+    [pytest]
+    DJANGO_SETTINGS_MODULE = taskmanager.settings
+  ```
+
+  review the code of the class:
+
+  ```python
+    from  datetime import datetime
+    class DateConverter:
+        regex = "[0-9]{4}-[0-9]{2}-[0-9]{2}
+
+        def to_python(self, value):
+            return datetime.strptime(value, "%Y-%m-%d")
+
+        def to_url(self, object):
+            return object.strftime("%Y-%m-%d")
+  ```
+  > Create a new file in **tasks/tests/test_converters.py** with the following code:
+  ```python
+    import pytest
+    from datetime import datetime
+    from tasks.converters import DateConverter
+
+    @pytest.fixture
+    def date_converter():
+        return DateConverter()
+
+    def test_to_python(date_converter):
+        # Test conversion from string to datetime
+        assert date_converter.to_python("2025-09-10") == datetime(2025, 9, 10)
+
+    def test_to_url(date_converter):
+        # Test conversion from datetime to string
+        date_obj = datetime(2025, 9, 10)
+        assert date_converter.to_url(date_obj) == "2025-09-10"
+  ```
+
 - ### The Pytest conftest.py file
 - ### Writing your first test with pytest
 - ### Understanding Django test database and pytest fixtures

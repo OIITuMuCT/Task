@@ -1,10 +1,14 @@
 import datetime
 from ninja import Schema, ModelSchema, Field, FilterSchema
 from pydantic import model_validator
-# from django.contrib.auth.models import User
+from django.contrib.auth.models import User
 from tasks.enums import TaskStatus
 from .models import Task
 
+class UserSchema(ModelSchema):
+    class Config:
+        model = User
+        model_fields = ["id", "username"]
 
 class TaskSchemaIn(ModelSchema):
     title: str = Field(..., example="Enhanced Satellite Data Analisis")

@@ -93,6 +93,21 @@
   - [Securing APIs: Permissions and Throttling](#securing-apis-permissions-and-throttling)
   - [Versioning Your API](#versioning-your-api)
 
+- [10. Testing with pytest](#10-testing-with-pytest)
+
+  - [Introduction to testing and pytest](#introduction-to-testing-and-pytest)
+  - [Installing and setting up pytest for Django](#installing-and-setting-up-pytest-for-django)
+  - [The Pytest conftest.py file](#the-pytest-conftestpy-file)
+  - [Writing your first test with pytest](#writing-your-first-test-with-pytest)
+  - [Understanding Django test database and pytest fixtures](#understanding-django-test-database-and-pytest-fixtures)
+  - [Pytest-django fixtures](#pytest-django-fixtures)
+  - [Mocking and patching in tests](#mocking-and-patching-in-tests)
+  - [Testing Django viewsTesting Django forms](#testing-django-viewstesting-django-forms)
+  - [Test factories](#test-factories)
+  - [Testing the API](#testing-the-api)
+  - [Behavior-driven development](#behavior-driven-development)
+  - [Advanced pytest features: Parametrization, plugins, and configuration](#advanced-pytest-features-parametrization-plugins-and-configuration)
+
 ## 1. Creating a **_Task_** model
 
   <details>  
@@ -1707,7 +1722,7 @@ urlpatterns = [
 - ### Validation and Error Handling in Django Ninja
 - ### Authenticating API Users
 
-  Token-Based Authentication
+  **Token-Based Authentication**
 
   ```python
     # accounts/models.py
@@ -1840,7 +1855,81 @@ urlpatterns = [
       ], "count": 3}
   ```
 
-JSON Web Tokens Authentication
+  **JSON Web Tokens Authentication**
+
+  Then, in our **tasks/api/security.py** file, we will add a new class to create the JWT Authentication:
+  ```python
+    # tasks/api/security.py
+    import jwt
+    from django.conf import settings
+    from django.contrib.auth import get_user_model
+    from django.contrib.auth.models import User
+    from ninja.security import HttpBearer
+
+    class JWTAuth(HttpBearer):
+      try:
+        # Decode the JWT token
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=["HS256"])
+
+        # Get the user information from the token's payload
+        user = get_user_model().objects.get(id=payload["id"])
+        return user, token
+
+      except Exception as e:
+        return None
+  ```
+  Now we need a function to issue the JWT token given to a user. Open the **accounts/service.py** and add the new function to issue a JWT token:
+  ```python
+    # accounts/api/security
+    import jwt
+    from django.conf import settings
+    from django.contrib.auth.models import AbstractUser
+    from datetime import datetime, timedelta
+
+    def issue_jwt_token(user: AbstractUser) -> str:
+        payload = {
+          "id": user.id,
+          "exp": datetime.utcnow() + timedelta(days=1) # The token will expire in 1 day
+        }
+        token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm="HS256")
+        return token
+  ```
+  You must add the new JWT_SECRET_KEY settings in the **taskmanager/settings.py** and get it from the environment variables:
+  ```python
+    # taskmanager/settings.py
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY, "jwt_secret")
+  ```
+  ```python
+    # taskmanager/api.py
+    api_v1 = NinjaAPI(version="v1", auth=[ApiKeyAuth(), JWTAuth()])
+  ```
+  And now let’s update our token view to include the JWT token:
+  ```python
+    # accounts/views.py 
+    @login_required
+    def token_generation_view(request):
+        token = generate_token(request.user)
+        jwt_token = issue_jwt_token(request.user)
+        return render(
+            request, "accounts/token_display.html",
+            {"token":token, "jwt_token": jwt_token}
+        )
+  ```
 
 - ### Securing APIs: Permissions and Throttling
 - ### Versioning Your API
+
+## 10. Testing with pytest
+
+- ### Introduction to testing and pytest
+- ### Installing and setting up pytest for Django
+- ### The Pytest conftest.py file
+- ### Writing your first test with pytest
+- ### Understanding Django test database and pytest fixtures
+- ### Pytest-django fixtures
+- ### Mocking and patching in tests
+- ### Testing Django viewsTesting Django forms
+- ### Test factories
+- ### Testing the API
+- ### Behavior-driven development
+- ### Advanced pytest features: Parametrization, plugins, and configuration

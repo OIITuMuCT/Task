@@ -118,7 +118,7 @@ def claim_task(user_id, task_id):
         raise TaskAlreadyClaimedException("Task is already claimed or completed.")
 
     # Claim the task
-    task.status = "IN_PROGRESS"
+    task.status = TaskStatus.IN_PROGRESS
     task.owner_id = user_id
     task.save()
 

@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 class OrganizationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Organization
+    # name = factory.Faker("company")
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -16,5 +17,19 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     username = factory.Faker("user_name")
     email = factory.Faker("email")
-    organization = factory.SubFactory(OrganizationFactory)
+    # organization = factory.SubFactory(OrganizationFactory)
 
+class TaskFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Task
+    title = factory.Faker("sentence", nb_words=4)
+    description = factory.Faker("paragraph")
+    status = factory.Iterator([status.value for status in TaskStatus])
+    creator = factory.SubFactory(UserFactory)
+    # The owner field can either be null or an instance of the User model
+    # This creates a User instance 50% of the time and sets the owner to None 50% or the time.
+    owner = factory.Maybe(
+        factory.Faker("pybool"),
+        yes_declaration=factory.SubFactory(UserFactory),
+        no_declaration=None
+    )

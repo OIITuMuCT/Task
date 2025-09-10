@@ -14,7 +14,7 @@ from tasks.schemas import (
 from accounts.api.security import ApiTokenAuth, require_permission
 from tasks.enums import TaskStatus
 from tasks import services
-from tasks.services import TaskAlreadyClaimedException, claim_task, search_tasks
+from tasks.services import TaskAlreadyClaimedException
 
 router = Router(auth=ApiTokenAuth(), tags=["tasks"])
 

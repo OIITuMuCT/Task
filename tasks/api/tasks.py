@@ -14,6 +14,7 @@ from tasks.schemas import (
 from accounts.api.security import ApiTokenAuth, require_permission
 from tasks.enums import TaskStatus
 from tasks import services
+from tasks.services import TaskAlreadyClaimedException, claim_task, search_tasks
 
 router = Router(auth=ApiTokenAuth(), tags=["tasks"])
 
@@ -63,3 +64,16 @@ def archived_tasks(request, created_at: PathDate = Path(...)):
 @router.get("/error")
 def generate_error(request):
     raise HttpError(status_code=400, detail="Custom error message")
+
+
+@router.patch("/{int:task_id}/claim")
+@require_permission("tasks.change_task")
+def claim_task_api(request: HttpRequest, task_id: int):
+    try:
+        services.claim_task(request.user.pk, task_id)
+        return {"message": "Task successfully claimed"}
+    except TaskAlreadyClaimedException:
+        # Raise an HttpError with status code 400
+        raise HttpError(
+            status_code=HTTPStatus.BAD_REQUEST, message="Task already claimed"
+        )

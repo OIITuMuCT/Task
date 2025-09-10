@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from django.http import HttpRequest, HttpResponse, Http404
+from django_ratelimit.decorators import ratelimit
 from ninja import Router, Path, Query
 from ninja.errors import HttpError
 from ninja.pagination import paginate
@@ -10,7 +11,7 @@ from tasks.schemas import (
     PathDate,
     TaskFilterSchema,
 )
-from accounts.api.security import ApiTokenAuth
+from accounts.api.security import ApiTokenAuth, require_permission
 from tasks.enums import TaskStatus
 from tasks import services
 
@@ -18,6 +19,8 @@ router = Router(auth=ApiTokenAuth(), tags=["tasks"])
 
 
 @router.post("/", response={201: CreateSchemaOut})
+@require_permission("tasks.add_tasks")
+@ratelimit(key="ip", rate="100/h")
 def create_task(request: HttpRequest, task_in: TaskSchemaIn):
     creator = request.user
     return services.create_task(creator, **task_in.dict())

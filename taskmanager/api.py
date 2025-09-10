@@ -1,11 +1,13 @@
 from ninja import NinjaAPI
 from django.core.exceptions import ObjectDoesNotExist
+from accounts.api.views import router as accounts_router
 from tasks.api.tasks import router as tasks_router
-from accounts.api.security import ApiTokenAuth
+from accounts.api.security import ApiTokenAuth, JWTAuth
 
-api_v1 = NinjaAPI(version="v1", auth=ApiTokenAuth())
+api_v1 = NinjaAPI(version="v1", auth=[ApiTokenAuth(), JWTAuth()])
 
 api_v1.add_router('/tasks/', tasks_router)
+api_v1.add_router("/accounts/", accounts_router)
 
 
 @api_v1.exception_handler(ObjectDoesNotExist)

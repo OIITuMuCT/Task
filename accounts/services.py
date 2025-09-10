@@ -5,6 +5,7 @@ from django.conf import settings
 from accounts.models import ApiToken
 from datetime import datetime, timedelta, timezone
 
+
 def generate_token(user: AbstractUser) -> str:
     """
     Retrieves or generates a unique API token for a given user.
@@ -21,13 +22,16 @@ def generate_token(user: AbstractUser) -> str:
     token, _ = ApiToken.objects.get_or_create(user=user)
     return str(token.token)
 
+
 def issue_jwt_token(user: AbstractUser) -> str:
     payload = {
         "id": user.id,
-        "exp": datetime.now(timezone.utc) + timedelta(days=1) # The token will expire in 1 day 
+        "exp": datetime.now(timezone.utc)
+        + timedelta(days=1),  # The token will expire in 1 day
     }
     token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm="HS256")
     return token
+
 
 def issue_jwt_refresh_token(user: AbstractUser) -> str:
     """
@@ -48,7 +52,9 @@ def issue_jwt_refresh_token(user: AbstractUser) -> str:
         "id": user.id,
         "exp": datetime.now(timezone.utc) + timedelta(days=30),
     }
-    refresh_token = jwt.encode(refresh_token_payload, settings.JWT_REFRESH_SECRET_KEY, algorithm="HS256")
+    refresh_token = jwt.encode(
+        refresh_token_payload, settings.JWT_REFRESH_SECRET_KEY, algorithm="HS256"
+    )
 
     return refresh_token
 
